@@ -7,5 +7,4 @@ window.NOKHBA_CATALOG = {
   "1BAC scientifique": ["Mathématiques", "Physique-Chimie", "SVT", "Français", "Arab", "Histoire-GEO", "Education islamique"],
   "1BAC lettres": ["Français","Mathématiques"],
   "2BAC": ["Physique-Chimie", "Mathématiques", "SVT", "Anglais", "Philosophie"]
-  "2BAC lettres": ["Anglais", "Philosophie"],
 };
