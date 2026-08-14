@@ -17,6 +17,10 @@ const loginCard = document.querySelector('#login-card');
 const dashboardContent = document.querySelector('#dashboard-content');
 const catalogueCard = document.querySelector('#catalogue-card');
 
+const groupsCard = document.querySelector('#groups-card');
+const groupsAdminEl = document.querySelector('#groups-admin');
+const groupsStatusEl = document.querySelector('#groups-status');
+
 const loginStatus = document.querySelector('#login-status');
 const catalogueStatus = document.querySelector('#status');
 
@@ -28,7 +32,8 @@ let records = [];
 ========================================================= */
 
 function escapeHtml(value) {
-  return String(value).replace(
+
+  return String(value ?? '').replace(
     /[&<>'"]/g,
     char => ({
       '&': '&amp;',
@@ -38,6 +43,7 @@ function escapeHtml(value) {
       '"': '&quot;'
     }[char])
   );
+
 }
 
 
@@ -55,21 +61,30 @@ function showCatalogue() {
 
         return `
           <label>
-            <b>${escapeHtml(level)}</b>
+
+            <b>
+              ${escapeHtml(level)}
+            </b>
 
             <textarea
               data-level="${escapeHtml(level)}"
               rows="3"
-            >${escapeHtml(subjects.join(', '))}</textarea>
+            >${escapeHtml(
+              Array.isArray(subjects)
+                ? subjects.join(', ')
+                : ''
+            )}</textarea>
 
             <small>
               Séparez les matières par une virgule.
             </small>
+
           </label>
         `;
 
       })
       .join('');
+
 }
 
 
@@ -80,11 +95,6 @@ async function loadCatalogue() {
     const remoteCatalogue =
       await remote.getCatalogue();
 
-    /*
-      Le client Supabase retourne un tableau.
-      On ne modifie pas la logique actuelle du formulaire.
-    */
-
     if (
       Array.isArray(remoteCatalogue) &&
       remoteCatalogue.length
@@ -92,19 +102,14 @@ async function loadCatalogue() {
 
       remoteCatalogue.forEach(row => {
 
-        /*
-          Compatibilité avec plusieurs noms possibles
-          sans toucher au catalogue local.
-        */
-
         const level =
           row.level ||
           row.niveau;
 
         const subjects =
           row.subjects ||
-          row.matières ||
-          row.matieres;
+          row.matieres ||
+          row.matières;
 
         if (
           level &&
@@ -130,6 +135,7 @@ async function loadCatalogue() {
   }
 
   showCatalogue();
+
 }
 
 
@@ -143,29 +149,36 @@ function renderLevelFilter() {
     levelFilterEl.value;
 
   const levels =
-    [...new Set(
-      records
-        .map(r => r.level)
-        .filter(Boolean)
-    )].sort();
+    [
+      ...new Set(
+        records
+          .map(r => r.level)
+          .filter(Boolean)
+      )
+    ].sort();
 
   levelFilterEl.innerHTML = `
+
     <option value="">
       Tous les niveaux
     </option>
 
     ${levels
       .map(level => `
+
         <option
           value="${escapeHtml(level)}"
           ${level === selected ? 'selected' : ''}
         >
           ${escapeHtml(level)}
         </option>
+
       `)
       .join('')
     }
+
   `;
+
 }
 
 
@@ -224,11 +237,20 @@ function renderRecords() {
   document.querySelector('#stats').innerHTML = `
 
     <div>
-      <b>${records.length}</b>
-      <small>Total</small>
+
+      <b>
+        ${records.length}
+      </b>
+
+      <small>
+        Total
+      </small>
+
     </div>
 
+
     <div>
+
       <b>
         ${
           records.filter(
@@ -237,10 +259,15 @@ function renderRecords() {
         }
       </b>
 
-      <small>En attente</small>
+      <small>
+        En attente
+      </small>
+
     </div>
 
+
     <div>
+
       <b>
         ${
           records.filter(
@@ -249,7 +276,10 @@ function renderRecords() {
         }
       </b>
 
-      <small>Confirmées</small>
+      <small>
+        Confirmées
+      </small>
+
     </div>
 
   `;
@@ -262,12 +292,15 @@ function renderRecords() {
   if (!filtered.length) {
 
     recordsEl.innerHTML = `
+
       <p class="selection-note">
         Aucune inscription ne correspond à votre recherche.
       </p>
+
     `;
 
     return;
+
   }
 
 
@@ -279,6 +312,7 @@ function renderRecords() {
           Array.isArray(r.subjects)
             ? r.subjects
             : [];
+
 
         return `
 
@@ -292,19 +326,29 @@ function renderRecords() {
                 )}
               </strong>
 
+
               <small>
+
                 ${escapeHtml(r.code || '')}
+
                 ·
+
                 ${escapeHtml(r.createdAt || '')}
+
               </small>
 
+
               <p>
+
                 ${escapeHtml(r.level || '')}
+
                 ·
+
                 ${subjects
                   .map(escapeHtml)
                   .join(', ')
                 }
+
               </p>
 
             </div>
@@ -325,12 +369,14 @@ function renderRecords() {
                   En attente
                 </option>
 
+
                 <option
                   value="Confirmée"
                   ${r.status === 'Confirmée' ? 'selected' : ''}
                 >
                   Confirmée
                 </option>
+
 
                 <option
                   value="Refusée"
@@ -349,6 +395,299 @@ function renderRecords() {
 
       })
       .join('');
+
+}
+
+
+/* =========================================================
+   GROUPES
+========================================================= */
+
+/*
+  IMPORTANT :
+
+  Cette partie NE CALCULE PAS les groupes.
+
+  Elle lit uniquement :
+
+    r.group
+    r.groupPosition
+    r.subjects
+
+  qui viennent déjà de Supabase via supabase-client.js.
+
+  Donc aucun changement dans la logique actuelle
+  d'attribution des groupes.
+*/
+
+
+function normalizeGroupName(value) {
+
+  if (
+    value === null ||
+    value === undefined ||
+    value === ''
+  ) {
+
+    return 'Groupe non attribué';
+
+  }
+
+
+  if (
+    typeof value === 'string'
+  ) {
+
+    return value;
+
+  }
+
+
+  if (
+    typeof value === 'number'
+  ) {
+
+    return String(value);
+
+  }
+
+
+  if (
+    typeof value === 'object'
+  ) {
+
+    return (
+      value.name ||
+      value.group ||
+      value.group_name ||
+      value.label ||
+      'Groupe attribué'
+    );
+
+  }
+
+
+  return String(value);
+
+}
+
+
+function renderGroups() {
+
+  if (!groupsAdminEl) return;
+
+
+  /*
+    On récupère uniquement les inscriptions
+    auxquelles un groupe est déjà associé.
+  */
+
+  const groupedRecords =
+    records.filter(
+      r =>
+        r.group !== null &&
+        r.group !== undefined &&
+        r.group !== ''
+    );
+
+
+  if (!groupedRecords.length) {
+
+    groupsAdminEl.innerHTML = `
+
+      <p class="selection-note">
+
+        Aucun groupe attribué pour le moment.
+
+      </p>
+
+    `;
+
+    return;
+
+  }
+
+
+  /*
+    Organisation :
+    
+    Matière
+      Groupe
+        élèves
+
+    On utilise les matières déjà présentes
+    dans chaque inscription.
+  */
+
+  const subjectsMap = {};
+
+
+  groupedRecords.forEach(record => {
+
+    const subjects =
+      Array.isArray(record.subjects)
+        ? record.subjects
+        : [];
+
+
+    const groupName =
+      normalizeGroupName(record.group);
+
+
+    subjects.forEach(subject => {
+
+      const subjectName =
+        String(subject);
+
+
+      if (!subjectsMap[subjectName]) {
+
+        subjectsMap[subjectName] = {};
+
+      }
+
+
+      if (
+        !subjectsMap[subjectName][groupName]
+      ) {
+
+        subjectsMap[subjectName][groupName] = [];
+
+      }
+
+
+      subjectsMap[subjectName][groupName]
+        .push(record);
+
+    });
+
+  });
+
+
+  groupsAdminEl.innerHTML =
+    Object.entries(subjectsMap)
+      .map(
+        ([subject, groups]) => {
+
+          return `
+
+            <article class="registration">
+
+              <div style="width:100%">
+
+                <h3
+                  style="
+                    margin:0 0 16px;
+                    color:#087fa8;
+                  "
+                >
+                  ${escapeHtml(subject)}
+                </h3>
+
+
+                ${Object.entries(groups)
+                  .map(
+                    ([groupName, students]) => {
+
+                      return `
+
+                        <div
+                          style="
+                            padding:14px 0;
+                            border-top:1px solid #e1e7ea;
+                          "
+                        >
+
+                          <div
+                            style="
+                              display:flex;
+                              justify-content:space-between;
+                              gap:15px;
+                              align-items:center;
+                              margin-bottom:10px;
+                            "
+                          >
+
+                            <strong>
+
+                              ${escapeHtml(groupName)}
+
+                            </strong>
+
+
+                            <span>
+
+                              ${students.length}
+                              élève${students.length > 1 ? 's' : ''}
+
+                            </span>
+
+                          </div>
+
+
+                          <div>
+
+                            ${students
+                              .map(student => `
+
+                                <div
+                                  style="
+                                    padding:7px 0;
+                                  "
+                                >
+
+                                  <b>
+                                    ${escapeHtml(
+                                      `${student.firstName || ''} ${student.lastName || ''}`
+                                    )}
+                                  </b>
+
+
+                                  <small
+                                    style="
+                                      display:block;
+                                    "
+                                  >
+
+                                    ${escapeHtml(
+                                      student.code || ''
+                                    )}
+
+                                    ${
+                                      student.groupPosition
+                                        ? ` · ${escapeHtml(student.groupPosition)}`
+                                        : ''
+                                    }
+
+                                  </small>
+
+                                </div>
+
+                              `)
+                              .join('')
+                            }
+
+                          </div>
+
+                        </div>
+
+                      `;
+
+                    }
+                  )
+                  .join('')
+                }
+
+              </div>
+
+            </article>
+
+          `;
+
+        }
+      )
+      .join('');
+
 }
 
 
@@ -365,6 +704,13 @@ async function loadRecords() {
 
     renderRecords();
 
+    /*
+      Après récupération des inscriptions,
+      on affiche également les groupes existants.
+    */
+
+    renderGroups();
+
   } catch (error) {
 
     console.error(
@@ -374,11 +720,27 @@ async function loadRecords() {
 
     records = [];
 
+
     recordsEl.innerHTML = `
+
       <p class="form-error">
         Impossible de charger les inscriptions.
       </p>
+
     `;
+
+
+    if (groupsAdminEl) {
+
+      groupsAdminEl.innerHTML = `
+
+        <p class="form-error">
+          Impossible de charger les groupes.
+        </p>
+
+      `;
+
+    }
 
   }
 
@@ -396,6 +758,13 @@ function openDashboard() {
   dashboardContent.hidden = false;
 
   catalogueCard.hidden = false;
+
+  if (groupsCard) {
+
+    groupsCard.hidden = false;
+
+  }
+
 
   loadCatalogue();
 
@@ -419,6 +788,7 @@ document
       loginStatus.textContent =
         'Connexion…';
 
+
       try {
 
         await remote.signIn(
@@ -434,7 +804,9 @@ document
 
         );
 
-        loginStatus.textContent = '';
+
+        loginStatus.textContent =
+          '';
 
         openDashboard();
 
@@ -481,8 +853,11 @@ recordsEl.addEventListener(
     if (
       !event.target.matches('[data-code]')
     ) {
+
       return;
+
     }
+
 
     const select =
       event.target;
@@ -504,6 +879,7 @@ recordsEl.addEventListener(
         status
       );
 
+
       await loadRecords();
 
     } catch (error) {
@@ -513,6 +889,7 @@ recordsEl.addEventListener(
       alert(
         'Impossible de mettre à jour le statut.'
       );
+
 
       await loadRecords();
 
@@ -552,15 +929,6 @@ document
     'click',
     async () => {
 
-      /*
-        On conserve la modification locale
-        sans toucher à la logique des groupes.
-
-        Le supabase-client actuel ne fournit pas encore
-        saveCatalogue(), donc on ne lance pas un appel
-        inexistant.
-      */
-
       document
         .querySelectorAll('[data-level]')
         .forEach(field => {
@@ -575,10 +943,6 @@ document
 
         });
 
-
-      /*
-        Sauvegarde locale uniquement pour l'instant.
-      */
 
       localStorage.setItem(
         'nokhba-catalogue',
