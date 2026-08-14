@@ -1,5 +1,6 @@
 /* =========================================================
-   INSTITUT NOKHBA - INSCRIPTION EN LIGNE
+   INSTITUT NOKHBA
+   INSCRIPTION EN LIGNE
 ========================================================= */
 
 
@@ -76,8 +77,8 @@ const subjectsByLevel = {
   ],
 
   '1BAC lettres': [
-    'Français',
-    'Mathématiques'
+    'Mathématiques',
+    'Français'
   ],
 
   '2BAC': [
@@ -103,23 +104,27 @@ try {
     );
 
   if (savedCatalogue) {
+
     Object.assign(
       subjectsByLevel,
       savedCatalogue
     );
+
   }
 
   if (window.NOKHBA_CATALOG) {
+
     Object.assign(
       subjectsByLevel,
       window.NOKHBA_CATALOG
     );
+
   }
 
 } catch (e) {
 
   console.warn(
-    'Catalogue non chargé:',
+    'Catalogue non chargé',
     e
   );
 
@@ -186,9 +191,7 @@ function setError(message = '') {
 
 
 /* =========================================================
-   AUTRE FIELDS
-   On les crée automatiquement.
-   Donc pas besoin de modifier index.html.
+   AUTRE
 ========================================================= */
 
 let addressOther = null;
@@ -198,137 +201,188 @@ let addressOtherWrapper = null;
 let schoolOtherWrapper = null;
 
 
-function createOtherField(
+/*
+  Cherche une case "Précisez..." déjà présente
+  dans index.html.
+*/
+
+function findOtherField(
   select,
-  type
+  text
 ) {
 
-  if (!select) return null;
-
-
-  const existing =
-    select.parentElement.querySelector(
-      `.nokhba-other-${type}`
-    );
-
-  if (existing) {
-
-    return {
-      wrapper: existing,
-      input: existing.querySelector('input')
-    };
-
+  if (!select) {
+    return null;
   }
 
 
-  const wrapper =
-    document.createElement('div');
+  /*
+    On cherche dans les labels proches du select.
+  */
 
-  wrapper.className =
-    `nokhba-other-${type}`;
+  const parent =
+    select.parentElement;
 
-  wrapper.hidden = true;
 
-  wrapper.style.display =
-    'none';
+  if (!parent) {
+    return null;
+  }
+
+
+  const labels =
+    [
+      ...parent.parentElement
+        ? parent.parentElement.querySelectorAll('label')
+        : parent.querySelectorAll('label')
+    ];
 
 
   const label =
-    document.createElement('label');
+    labels.find(
+      label =>
+        label.textContent
+          .trim()
+          .toLowerCase()
+          .includes(
+            text.toLowerCase()
+          )
+    );
 
 
-  label.textContent =
-    type === 'address'
-      ? 'Précisez votre quartier'
-      : 'Précisez votre établissement';
-
-
-  const input =
-    document.createElement('input');
-
-  input.type =
-    'text';
-
-  input.name =
-    type === 'address'
-      ? 'addressOther'
-      : 'schoolOther';
-
-  input.placeholder =
-    type === 'address'
-      ? 'Écrivez votre quartier'
-      : 'Écrivez le nom de votre établissement';
-
-  input.autocomplete =
-    'off';
-
-  input.required =
-    false;
-
-
-  label.appendChild(input);
-
-  wrapper.appendChild(label);
-
-
-  select.parentElement.insertAdjacentElement(
-    'afterend',
-    wrapper
-  );
+  if (!label) {
+    return null;
+  }
 
 
   return {
-    wrapper,
-    input
+    wrapper: label,
+    input:
+      label.querySelector(
+        'input, textarea'
+      )
   };
 
 }
 
 
-/* =========================================================
-   INITIALISER LES CHAMPS AUTRE
-========================================================= */
+/*
+  Si la case existe déjà dans HTML,
+  on la récupère.
+
+  Si elle n'existe pas,
+  on la crée.
+*/
 
 function initOtherFields() {
 
-  if (addressSelect) {
+  /* =====================================================
+     ADRESSE
+  ===================================================== */
 
-    const result =
-      createOtherField(
-        addressSelect,
-        'address'
+  const addressExisting =
+    findOtherField(
+      addressSelect,
+      'Précisez votre quartier'
+    );
+
+
+  if (addressExisting) {
+
+    addressOtherWrapper =
+      addressExisting.wrapper;
+
+    addressOther =
+      addressExisting.input;
+
+  } else if (addressSelect) {
+
+    const wrapper =
+      document.createElement('label');
+
+
+    wrapper.className =
+      'nokhba-other-address';
+
+
+    wrapper.innerHTML = `
+      Précisez votre quartier
+      <input
+        type="text"
+        name="addressOther"
+        placeholder="Écrivez votre quartier"
+        autocomplete="off"
+      >
+    `;
+
+
+    addressSelect.parentElement
+      .insertAdjacentElement(
+        'afterend',
+        wrapper
       );
 
-    if (result) {
 
-      addressOtherWrapper =
-        result.wrapper;
+    addressOtherWrapper =
+      wrapper;
 
-      addressOther =
-        result.input;
-
-    }
+    addressOther =
+      wrapper.querySelector('input');
 
   }
 
 
-  if (schoolSelect) {
+  /* =====================================================
+     ÉTABLISSEMENT
+  ===================================================== */
 
-    const result =
-      createOtherField(
-        schoolSelect,
-        'school'
+  const schoolExisting =
+    findOtherField(
+      schoolSelect,
+      'Précisez votre établissement'
+    );
+
+
+  if (schoolExisting) {
+
+    schoolOtherWrapper =
+      schoolExisting.wrapper;
+
+    schoolOther =
+      schoolExisting.input;
+
+  } else if (schoolSelect) {
+
+    const wrapper =
+      document.createElement('label');
+
+
+    wrapper.className =
+      'nokhba-other-school';
+
+
+    wrapper.innerHTML = `
+      Précisez votre établissement
+      <input
+        type="text"
+        name="schoolOther"
+        placeholder="Écrivez le nom de votre établissement"
+        autocomplete="off"
+      >
+    `;
+
+
+    schoolSelect.parentElement
+      .insertAdjacentElement(
+        'afterend',
+        wrapper
       );
 
-    if (result) {
 
-      schoolOtherWrapper =
-        result.wrapper;
+    schoolOtherWrapper =
+      wrapper;
 
-      schoolOther =
-        result.input;
-
-    }
+    schoolOther =
+      wrapper.querySelector('input');
 
   }
 
@@ -339,14 +393,14 @@ function initOtherFields() {
 
 
 /* =========================================================
-   AFFICHER / CACHER AUTRE
+   SHOW / HIDE AUTRE
 ========================================================= */
 
 function toggleOtherFields() {
 
-  /* -------------------------
-     Adresse
-  ------------------------- */
+  /* =====================================================
+     ADRESSE
+  ===================================================== */
 
   if (
     addressSelect &&
@@ -358,15 +412,17 @@ function toggleOtherFields() {
       addressSelect.value === 'Autre';
 
 
-    addressOtherWrapper.hidden =
-      !isOther;
-
-
     addressOtherWrapper.style.setProperty(
       'display',
-      isOther ? 'block' : 'none',
+      isOther
+        ? 'block'
+        : 'none',
       'important'
     );
+
+
+    addressOther.hidden =
+      !isOther;
 
 
     addressOther.required =
@@ -374,15 +430,18 @@ function toggleOtherFields() {
 
 
     if (!isOther) {
-      addressOther.value = '';
+
+      addressOther.value =
+        '';
+
     }
 
   }
 
 
-  /* -------------------------
-     Établissement
-  ------------------------- */
+  /* =====================================================
+     ÉTABLISSEMENT
+  ===================================================== */
 
   if (
     schoolSelect &&
@@ -394,15 +453,17 @@ function toggleOtherFields() {
       schoolSelect.value === 'Autre';
 
 
-    schoolOtherWrapper.hidden =
-      !isOther;
-
-
     schoolOtherWrapper.style.setProperty(
       'display',
-      isOther ? 'block' : 'none',
+      isOther
+        ? 'block'
+        : 'none',
       'important'
     );
+
+
+    schoolOther.hidden =
+      !isOther;
 
 
     schoolOther.required =
@@ -410,7 +471,10 @@ function toggleOtherFields() {
 
 
     if (!isOther) {
-      schoolOther.value = '';
+
+      schoolOther.value =
+        '';
+
     }
 
   }
@@ -419,14 +483,19 @@ function toggleOtherFields() {
 
 
 /* =========================================================
-   PHONE FORMAT
-   0X XX XX XX XX
+   PHONE
 ========================================================= */
 
 function formatPhone(input) {
 
-  if (!input) return;
+  if (!input) {
+    return;
+  }
 
+
+  /*
+    On garde uniquement les chiffres.
+  */
 
   let digits =
     input.value.replace(
@@ -435,7 +504,9 @@ function formatPhone(input) {
     );
 
 
-  /* Maximum 10 chiffres */
+  /*
+    Maximum 10 chiffres.
+  */
 
   digits =
     digits.substring(
@@ -444,41 +515,71 @@ function formatPhone(input) {
     );
 
 
+  /*
+    Format:
+    0X XX XX XX XX
+  */
+
   const parts = [];
 
 
-  if (digits.length >= 1) {
+  if (digits.length > 0) {
+
     parts.push(
-      digits.substring(0, 2)
+      digits.substring(
+        0,
+        2
+      )
     );
+
   }
 
 
   if (digits.length > 2) {
+
     parts.push(
-      digits.substring(2, 4)
+      digits.substring(
+        2,
+        4
+      )
     );
+
   }
 
 
   if (digits.length > 4) {
+
     parts.push(
-      digits.substring(4, 6)
+      digits.substring(
+        4,
+        6
+      )
     );
+
   }
 
 
   if (digits.length > 6) {
+
     parts.push(
-      digits.substring(6, 8)
+      digits.substring(
+        6,
+        8
+      )
     );
+
   }
 
 
   if (digits.length > 8) {
+
     parts.push(
-      digits.substring(8, 10)
+      digits.substring(
+        8,
+        10
+      )
     );
+
   }
 
 
@@ -490,11 +591,12 @@ function formatPhone(input) {
 
 function getRawPhone(value) {
 
-  return String(value || '')
-    .replace(
-      /\D/g,
-      ''
-    );
+  return String(
+    value || ''
+  ).replace(
+    /\D/g,
+    ''
+  );
 
 }
 
@@ -504,6 +606,13 @@ function isValidPhone(value) {
   const phone =
     getRawPhone(value);
 
+
+  /*
+    Maroc:
+    05XXXXXXXX
+    06XXXXXXXX
+    07XXXXXXXX
+  */
 
   return /^0[5-7]\d{8}$/.test(
     phone
@@ -521,6 +630,7 @@ function showStep(step) {
   if (step < 1) {
     step = 1;
   }
+
 
   if (step > 4) {
     step = 4;
@@ -546,7 +656,9 @@ function showStep(step) {
 
 
   document
-    .querySelectorAll('#steps li')
+    .querySelectorAll(
+      '#steps li'
+    )
     .forEach(
       (li, index) => {
 
@@ -574,12 +686,16 @@ function showStep(step) {
 
 
   if (step === 3) {
+
     renderSubjects();
+
   }
 
 
   if (step === 4) {
+
     renderRecap();
+
   }
 
 
@@ -602,7 +718,10 @@ function renderLevels() {
       '#levels'
     );
 
-  if (!container) return;
+
+  if (!container) {
+    return;
+  }
 
 
   container.innerHTML =
@@ -639,11 +758,16 @@ function renderSubjects() {
       '#subjects'
     );
 
-  if (!container) return;
+
+  if (!container) {
+    return;
+  }
 
 
   const subjects =
-    subjectsByLevel[state.level] || [];
+    subjectsByLevel[
+      state.level
+    ] || [];
 
 
   const intro =
@@ -753,7 +877,9 @@ function getSchoolValue() {
 
 function renderRecap() {
 
-  if (!form) return;
+  if (!form) {
+    return;
+  }
 
 
   const d =
@@ -780,7 +906,7 @@ function renderRecap() {
     d.get('studentPhone') || '';
 
 
-  const parentPhone =
+  const parentPhoneValue =
     d.get('parentPhone') || '';
 
 
@@ -798,7 +924,9 @@ function renderRecap() {
     );
 
 
-  if (!recap) return;
+  if (!recap) {
+    return;
+  }
 
 
   recap.innerHTML = `
@@ -808,7 +936,9 @@ function renderRecap() {
       <h3>Élève</h3>
 
       <p>
-        <strong>${fullName}</strong>
+        <strong>
+          ${fullName}
+        </strong>
       </p>
 
       <p>
@@ -823,7 +953,7 @@ function renderRecap() {
 
       <p>
         Téléphone parent :
-        ${parentPhone || '—'}
+        ${parentPhoneValue || '—'}
       </p>
 
       <p>
@@ -844,7 +974,9 @@ function renderRecap() {
       <h3>Niveau</h3>
 
       <p>
-        <strong>${state.level}</strong>
+        <strong>
+          ${state.level}
+        </strong>
       </p>
 
     </div>
@@ -856,16 +988,25 @@ function renderRecap() {
 
       ${
         state.subjects.length
+
           ? state.subjects
               .map(
                 subject => `
                   <div class="subject-row">
-                    <span>${subject}</span>
-                    <span>✓</span>
+
+                    <span>
+                      ${subject}
+                    </span>
+
+                    <span>
+                      ✓
+                    </span>
+
                   </div>
                 `
               )
               .join('')
+
           : '<p>Aucune matière sélectionnée.</p>'
       }
 
@@ -886,15 +1027,10 @@ function validate() {
 
 
   /* =====================================================
-     ÉTAPE 1
+     STEP 1
   ===================================================== */
 
   if (state.step === 1) {
-
-    if (!form) {
-      return false;
-    }
-
 
     const requiredFields =
       [
@@ -905,17 +1041,13 @@ function validate() {
 
 
     /*
-      Vérifier les champs obligatoires
+      Champs obligatoires
     */
 
     for (
       const field
       of requiredFields
     ) {
-
-      /*
-        Checkbox / select / input
-      */
 
       if (
         !String(
@@ -927,17 +1059,19 @@ function validate() {
           'Veuillez compléter tous les champs obligatoires.'
         );
 
+
         field.focus();
 
         return false;
+
       }
 
     }
 
 
-    /* -------------------------
-       Téléphone élève
-    ------------------------- */
+    /*
+      Téléphone élève
+    */
 
     if (
       !isValidPhone(
@@ -957,9 +1091,9 @@ function validate() {
     }
 
 
-    /* -------------------------
-       Téléphone parent
-    ------------------------- */
+    /*
+      Téléphone parent
+    */
 
     if (
       !isValidPhone(
@@ -979,44 +1113,56 @@ function validate() {
     }
 
 
-    /* -------------------------
-       Adresse Autre
-    ------------------------- */
+    /*
+      Adresse = Autre
+    */
 
     if (
-      addressSelect?.value === 'Autre' &&
-      !addressOther?.value.trim()
+      addressSelect?.value === 'Autre'
     ) {
 
-      setError(
-        'Veuillez préciser votre quartier.'
-      );
+      if (
+        !addressOther ||
+        !addressOther.value.trim()
+      ) {
+
+        setError(
+          'Veuillez préciser votre quartier.'
+        );
 
 
-      addressOther?.focus();
+        addressOther?.focus();
 
-      return false;
+        return false;
+
+      }
 
     }
 
 
-    /* -------------------------
-       Établissement Autre
-    ------------------------- */
+    /*
+      Établissement = Autre
+    */
 
     if (
-      schoolSelect?.value === 'Autre' &&
-      !schoolOther?.value.trim()
+      schoolSelect?.value === 'Autre'
     ) {
 
-      setError(
-        'Veuillez préciser votre établissement.'
-      );
+      if (
+        !schoolOther ||
+        !schoolOther.value.trim()
+      ) {
+
+        setError(
+          'Veuillez préciser votre établissement.'
+        );
 
 
-      schoolOther?.focus();
+        schoolOther?.focus();
 
-      return false;
+        return false;
+
+      }
 
     }
 
@@ -1024,7 +1170,7 @@ function validate() {
 
 
   /* =====================================================
-     ÉTAPE 2
+     STEP 2
   ===================================================== */
 
   if (
@@ -1036,13 +1182,14 @@ function validate() {
       'Veuillez choisir votre niveau.'
     );
 
+
     return false;
 
   }
 
 
   /* =====================================================
-     ÉTAPE 3
+     STEP 3
   ===================================================== */
 
   if (
@@ -1054,19 +1201,20 @@ function validate() {
       'Sélectionnez au moins une matière.'
     );
 
+
     return false;
 
   }
 
 
   /* =====================================================
-     ÉTAPE 4
+     STEP 4
   ===================================================== */
 
   if (state.step === 4) {
 
     const confirmation =
-      form?.querySelector(
+      form.querySelector(
         '[name="confirmed"]'
       );
 
@@ -1079,6 +1227,7 @@ function validate() {
       setError(
         'Veuillez confirmer que les informations saisies sont correctes.'
       );
+
 
       return false;
 
@@ -1093,41 +1242,43 @@ function validate() {
 
 
 /* =========================================================
-   CLICK EVENTS
+   CLICK
 ========================================================= */
 
 document.addEventListener(
   'click',
   event => {
 
-    const nextButton =
+    const next =
       event.target.closest(
         '[data-next]'
       );
 
 
-    const backButton =
+    const back =
       event.target.closest(
         '[data-back]'
       );
 
 
-    const levelButton =
+    const level =
       event.target.closest(
         '[data-level]'
       );
 
 
     /* -------------------------
-       LEVEL
+       Niveau
     ------------------------- */
 
-    if (levelButton) {
+    if (level) {
 
       state.level =
-        levelButton.dataset.level;
+        level.dataset.level;
 
-      state.subjects = [];
+
+      state.subjects =
+        [];
 
 
       renderLevels();
@@ -1138,10 +1289,10 @@ document.addEventListener(
 
 
     /* -------------------------
-       NEXT
+       Continuer
     ------------------------- */
 
-    if (nextButton) {
+    if (next) {
 
       if (
         validate()
@@ -1159,10 +1310,10 @@ document.addEventListener(
 
 
     /* -------------------------
-       BACK
+       Retour
     ------------------------- */
 
-    if (backButton) {
+    if (back) {
 
       showStep(
         state.step - 1
@@ -1177,7 +1328,7 @@ document.addEventListener(
 
 
 /* =========================================================
-   CHANGE EVENTS
+   CHANGE
 ========================================================= */
 
 document.addEventListener(
@@ -1218,8 +1369,8 @@ document.addEventListener(
 
         state.subjects =
           state.subjects.filter(
-            x =>
-              x !== subject
+            item =>
+              item !== subject
           );
 
       }
@@ -1237,7 +1388,8 @@ document.addEventListener(
     ------------------------- */
 
     if (
-      event.target === addressSelect
+      event.target ===
+      addressSelect
     ) {
 
       toggleOtherFields();
@@ -1252,7 +1404,8 @@ document.addEventListener(
     ------------------------- */
 
     if (
-      event.target === schoolSelect
+      event.target ===
+      schoolSelect
     ) {
 
       toggleOtherFields();
@@ -1274,8 +1427,10 @@ document.addEventListener(
   event => {
 
     if (
-      event.target === studentPhone ||
-      event.target === parentPhone
+      event.target ===
+        studentPhone ||
+      event.target ===
+        parentPhone
     ) {
 
       formatPhone(
@@ -1304,8 +1459,12 @@ if (submitButton) {
     'click',
     async () => {
 
-      if (!validate()) {
+      if (
+        !validate()
+      ) {
+
         return;
+
       }
 
 
@@ -1336,12 +1495,16 @@ if (submitButton) {
 
         phone:
           getRawPhone(
-            d.get('studentPhone')
+            d.get(
+              'studentPhone'
+            )
           ),
 
         parentPhone:
           getRawPhone(
-            d.get('parentPhone')
+            d.get(
+              'parentPhone'
+            )
           ),
 
         school:
@@ -1389,11 +1552,10 @@ if (submitButton) {
         } else {
 
           throw new Error(
-            'Aucun système de stockage disponible.'
+            'Aucun système de stockage disponible'
           );
 
         }
-
 
       } catch (err) {
 
@@ -1406,6 +1568,7 @@ if (submitButton) {
         setError(
           'Une erreur est survenue. Veuillez réessayer.'
         );
+
 
         return;
 
@@ -1451,8 +1614,10 @@ if (submitButton) {
 
 
       if (success) {
+
         success.hidden =
           false;
+
       }
 
 
@@ -1463,8 +1628,10 @@ if (submitButton) {
 
 
       if (progress) {
+
         progress.hidden =
           true;
+
       }
 
 
@@ -1510,7 +1677,6 @@ if (copyButton) {
         copyButton.textContent =
           'Code copié ✓';
 
-
       } catch {
 
         copyButton.textContent =
@@ -1539,21 +1705,19 @@ if (copyButton) {
    NOUVELLE INSCRIPTION
 ========================================================= */
 
-const newRegistrationButton =
+const newRegistration =
   document.querySelector(
     '#new-registration'
   );
 
 
-if (newRegistrationButton) {
+if (newRegistration) {
 
-  newRegistrationButton.addEventListener(
+  newRegistration.addEventListener(
     'click',
     () => {
 
-      if (form) {
-        form.reset();
-      }
+      form.reset();
 
 
       state.step =
@@ -1566,10 +1730,8 @@ if (newRegistrationButton) {
         [];
 
 
-      if (form) {
-        form.hidden =
-          false;
-      }
+      form.hidden =
+        false;
 
 
       const success =
@@ -1579,8 +1741,10 @@ if (newRegistrationButton) {
 
 
       if (success) {
+
         success.hidden =
           true;
+
       }
 
 
@@ -1591,8 +1755,10 @@ if (newRegistrationButton) {
 
 
       if (progress) {
+
         progress.hidden =
           false;
+
       }
 
 
