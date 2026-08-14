@@ -23,20 +23,34 @@
     );
 
 
-  let session =
-    JSON.parse(
-      localStorage.getItem(tokenKey) ||
-      'null'
-    );
+  let session = null;
+
+  try {
+
+    session =
+      JSON.parse(
+        localStorage.getItem(tokenKey) ||
+        'null'
+      );
+
+  } catch {
+
+    session = null;
+
+  }
 
 
   /* =======================================================
-     AUTH HEADERS
+     PUBLIC HEADERS
+     
+     IMPORTANT:
+     Les inscriptions publiques ne doivent PAS
+     envoyer un ancien JWT.
   ======================================================= */
 
-  function authHeaders(){
+  function publicHeaders(){
 
-    const headers = {
+    return {
 
       apikey:
         c.anonKey,
@@ -46,11 +60,21 @@
 
     };
 
+  }
 
-    /*
-      Authorization uniquement
-      lorsqu'une vraie session existe.
-    */
+
+  /* =======================================================
+     AUTH HEADERS
+     
+     Utilisés uniquement pour les opérations
+     nécessitant une session utilisateur.
+  ======================================================= */
+
+  function authHeaders(){
+
+    const headers =
+      publicHeaders();
+
 
     if (
       session?.access_token
@@ -69,6 +93,12 @@
 
   /* =======================================================
      REQUEST
+     
+     options.auth = true
+     => utilise le JWT de session
+     
+     sinon
+     => requête publique avec apikey uniquement
   ======================================================= */
 
   async function request(
@@ -76,9 +106,15 @@
     options = {}
   ){
 
-    const headers = {
+    const headers =
+      options.auth
+        ? authHeaders()
+        : publicHeaders();
 
-      ...authHeaders(),
+
+    const finalHeaders = {
+
+      ...headers,
 
       Prefer:
         options.prefer ||
@@ -89,18 +125,30 @@
     };
 
 
+    /*
+      Ne pas envoyer "auth" vers fetch.
+    */
+
+    const fetchOptions = {
+
+      ...options,
+
+      headers:
+        finalHeaders
+
+    };
+
+
+    delete fetchOptions.auth;
+    delete fetchOptions.prefer;
+
+
     const r =
       await fetch(
 
         `${c.url}/rest/v1/${path}`,
 
-        {
-
-          ...options,
-
-          headers
-
-        }
+        fetchOptions
 
       );
 
@@ -109,6 +157,21 @@
 
       const text =
         await r.text();
+
+
+      /*
+        Si le JWT admin est expiré,
+        on supprime uniquement la session locale.
+      */
+
+      if (
+        r.status === 401 &&
+        options.auth
+      ){
+
+        clearSession();
+
+      }
 
 
       throw new Error(
@@ -149,15 +212,8 @@
           method:
             'POST',
 
-          headers: {
-
-            apikey:
-              c.anonKey,
-
-            'Content-Type':
-              'application/json'
-
-          },
+          headers:
+            publicHeaders(),
 
           body:
             JSON.stringify(body)
@@ -284,9 +340,15 @@
        CREATE REGISTRATION
        
        IMPORTANT:
-       Le group et la position sont calculés
-       directement par Supabase.
-    ===================================================== */
+       PUBLIC REQUEST
+       
+       Aucun JWT de session n'est envoyé ici.
+       
+       Supabase calcule directement :
+       - groupe
+       - position
+       - capacité
+       ===================================================== */
 
     async createRegistration(
       record
@@ -301,6 +363,14 @@
 
             method:
               'POST',
+
+            /*
+              IMPORTANT:
+              Pas de JWT admin.
+              Seulement apikey.
+            */
+            auth:
+              false,
 
             prefer:
               'return=representation',
@@ -346,7 +416,7 @@
 
 
       /*
-        Le résultat contient :
+        Le résultat peut contenir :
 
         group_name
         group_position
@@ -362,6 +432,9 @@
 
     /* =====================================================
        GET REGISTRATIONS
+       
+       ADMIN
+       => JWT de session
     ===================================================== */
 
     async getRegistrations(){
@@ -372,6 +445,9 @@
           'registrations?select=*&order=created_at.desc',
 
           {
+
+            auth:
+              true,
 
             prefer:
               'return=representation'
@@ -445,6 +521,9 @@
 
     /* =====================================================
        UPDATE STATUS
+       
+       ADMIN
+       => JWT de session
     ===================================================== */
 
     async updateStatus(
@@ -460,6 +539,9 @@
 
           method:
             'PATCH',
+
+          auth:
+            true,
 
           prefer:
             'return=representation',
@@ -480,6 +562,9 @@
 
     /* =====================================================
        CATALOGUE
+       
+       PUBLIC
+       => Pas besoin de JWT
     ===================================================== */
 
     async getCatalogue(){
@@ -492,6 +577,9 @@
             'catalogue?select=*',
 
             {
+
+              auth:
+                false,
 
               prefer:
                 'return=representation'
