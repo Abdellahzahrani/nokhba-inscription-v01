@@ -161,9 +161,20 @@ try {
 ========================================================= */
 
 const state = {
+
   step: 1,
+
   level: '',
-  subjects: []
+
+  subjects: [],
+
+  /*
+    Nouveauté :
+    groupes indépendants par matière
+  */
+
+  subjectGroups: []
+
 };
 
 
@@ -172,22 +183,32 @@ const state = {
 ========================================================= */
 
 const form =
-  document.querySelector('#registration-form');
+  document.querySelector(
+    '#registration-form'
+  );
 
 const screens =
   [...document.querySelectorAll('.screen')];
 
 const addressSelect =
-  form?.querySelector('[name="address"]');
+  form?.querySelector(
+    '[name="address"]'
+  );
 
 const schoolSelect =
-  form?.querySelector('[name="school"]');
+  form?.querySelector(
+    '[name="school"]'
+  );
 
 const studentPhone =
-  form?.querySelector('[name="studentPhone"]');
+  form?.querySelector(
+    '[name="studentPhone"]'
+  );
 
 const parentPhone =
-  form?.querySelector('[name="parentPhone"]');
+  form?.querySelector(
+    '[name="parentPhone"]'
+  );
 
 
 /* =========================================================
@@ -203,13 +224,18 @@ function getErrorElement() {
 }
 
 
-function setError(message = '') {
+function setError(
+  message = ''
+) {
 
   const el =
     getErrorElement();
 
   if (el) {
-    el.textContent = message;
+
+    el.textContent =
+      message;
+
   }
 
 }
@@ -232,15 +258,22 @@ function findOtherField(
 ) {
 
   if (!select) {
+
     return null;
+
   }
+
 
   const parent =
     select.parentElement;
 
+
   if (!parent) {
+
     return null;
+
   }
+
 
   const labels =
     [
@@ -248,6 +281,7 @@ function findOtherField(
         ? parent.parentElement.querySelectorAll('label')
         : parent.querySelectorAll('label')
     ];
+
 
   const label =
     labels.find(
@@ -260,16 +294,24 @@ function findOtherField(
           )
     );
 
+
   if (!label) {
+
     return null;
+
   }
 
+
   return {
-    wrapper: label,
+
+    wrapper:
+      label,
+
     input:
       label.querySelector(
         'input, textarea'
       )
+
   };
 
 }
@@ -281,11 +323,16 @@ function findOtherField(
 
 function initOtherFields() {
 
+  /* =========================
+     ADRESSE
+  ========================= */
+
   const addressExisting =
     findOtherField(
       addressSelect,
       'Précisez votre quartier'
     );
+
 
   if (addressExisting) {
 
@@ -295,16 +342,23 @@ function initOtherFields() {
     addressOther =
       addressExisting.input;
 
-  } else if (addressSelect) {
+  }
+
+  else if (addressSelect) {
 
     const wrapper =
-      document.createElement('label');
+      document.createElement(
+        'label'
+      );
+
 
     wrapper.className =
       'nokhba-other-address';
 
+
     wrapper.innerHTML = `
       Précisez votre quartier
+
       <input
         type="text"
         name="addressOther"
@@ -313,26 +367,36 @@ function initOtherFields() {
       >
     `;
 
+
     addressSelect.parentElement
       .insertAdjacentElement(
         'afterend',
         wrapper
       );
 
+
     addressOtherWrapper =
       wrapper;
 
+
     addressOther =
-      wrapper.querySelector('input');
+      wrapper.querySelector(
+        'input'
+      );
 
   }
 
+
+  /* =========================
+     ÉTABLISSEMENT
+  ========================= */
 
   const schoolExisting =
     findOtherField(
       schoolSelect,
       'Précisez votre établissement'
     );
+
 
   if (schoolExisting) {
 
@@ -342,16 +406,23 @@ function initOtherFields() {
     schoolOther =
       schoolExisting.input;
 
-  } else if (schoolSelect) {
+  }
+
+  else if (schoolSelect) {
 
     const wrapper =
-      document.createElement('label');
+      document.createElement(
+        'label'
+      );
+
 
     wrapper.className =
       'nokhba-other-school';
 
+
     wrapper.innerHTML = `
       Précisez votre établissement
+
       <input
         type="text"
         name="schoolOther"
@@ -360,19 +431,25 @@ function initOtherFields() {
       >
     `;
 
+
     schoolSelect.parentElement
       .insertAdjacentElement(
         'afterend',
         wrapper
       );
 
+
     schoolOtherWrapper =
       wrapper;
 
+
     schoolOther =
-      wrapper.querySelector('input');
+      wrapper.querySelector(
+        'input'
+      );
 
   }
+
 
   toggleOtherFields();
 
@@ -385,6 +462,10 @@ function initOtherFields() {
 
 function toggleOtherFields() {
 
+  /* =========================
+     ADRESSE
+  ========================= */
+
   if (
     addressSelect &&
     addressOtherWrapper &&
@@ -394,6 +475,7 @@ function toggleOtherFields() {
     const isOther =
       addressSelect.value === 'Autre';
 
+
     addressOtherWrapper.style.setProperty(
       'display',
       isOther
@@ -402,11 +484,14 @@ function toggleOtherFields() {
       'important'
     );
 
+
     addressOther.hidden =
       !isOther;
 
+
     addressOther.required =
       isOther;
+
 
     if (!isOther) {
 
@@ -418,6 +503,10 @@ function toggleOtherFields() {
   }
 
 
+  /* =========================
+     ÉTABLISSEMENT
+  ========================= */
+
   if (
     schoolSelect &&
     schoolOtherWrapper &&
@@ -427,6 +516,7 @@ function toggleOtherFields() {
     const isOther =
       schoolSelect.value === 'Autre';
 
+
     schoolOtherWrapper.style.setProperty(
       'display',
       isOther
@@ -435,11 +525,14 @@ function toggleOtherFields() {
       'important'
     );
 
+
     schoolOther.hidden =
       !isOther;
 
+
     schoolOther.required =
       isOther;
+
 
     if (!isOther) {
 
@@ -457,11 +550,16 @@ function toggleOtherFields() {
    PHONE
 ========================================================= */
 
-function formatPhone(input) {
+function formatPhone(
+  input
+) {
 
   if (!input) {
+
     return;
+
   }
+
 
   let digits =
     input.value.replace(
@@ -469,13 +567,16 @@ function formatPhone(input) {
       ''
     );
 
+
   digits =
     digits.substring(
       0,
       10
     );
 
+
   const parts = [];
+
 
   if (digits.length > 0) {
 
@@ -488,6 +589,7 @@ function formatPhone(input) {
 
   }
 
+
   if (digits.length > 2) {
 
     parts.push(
@@ -498,6 +600,7 @@ function formatPhone(input) {
     );
 
   }
+
 
   if (digits.length > 4) {
 
@@ -510,6 +613,7 @@ function formatPhone(input) {
 
   }
 
+
   if (digits.length > 6) {
 
     parts.push(
@@ -520,6 +624,7 @@ function formatPhone(input) {
     );
 
   }
+
 
   if (digits.length > 8) {
 
@@ -532,13 +637,16 @@ function formatPhone(input) {
 
   }
 
+
   input.value =
     parts.join(' ');
 
 }
 
 
-function getRawPhone(value) {
+function getRawPhone(
+  value
+) {
 
   return String(
     value || ''
@@ -550,10 +658,15 @@ function getRawPhone(value) {
 }
 
 
-function isValidPhone(value) {
+function isValidPhone(
+  value
+) {
 
   const phone =
-    getRawPhone(value);
+    getRawPhone(
+      value
+    );
+
 
   return /^0[5-7]\d{8}$/.test(
     phone
@@ -566,18 +679,27 @@ function isValidPhone(value) {
    NAVIGATION
 ========================================================= */
 
-function showStep(step) {
+function showStep(
+  step
+) {
 
   if (step < 1) {
+
     step = 1;
+
   }
 
+
   if (step > 4) {
+
     step = 4;
+
   }
+
 
   state.step =
     step;
+
 
   screens.forEach(
     screen => {
@@ -591,6 +713,7 @@ function showStep(step) {
 
     }
   );
+
 
   document
     .querySelectorAll(
@@ -607,10 +730,12 @@ function showStep(step) {
       }
     );
 
+
   const progressBar =
     document.querySelector(
       '#progress-bar'
     );
+
 
   if (progressBar) {
 
@@ -619,11 +744,13 @@ function showStep(step) {
 
   }
 
+
   if (step === 3) {
 
     renderSubjects();
 
   }
+
 
   if (step === 4) {
 
@@ -631,9 +758,13 @@ function showStep(step) {
 
   }
 
+
   window.scrollTo({
+
     top: 0,
+
     behavior: 'smooth'
+
   });
 
 }
@@ -650,14 +781,19 @@ function renderLevels() {
       '#levels'
     );
 
+
   if (!container) {
+
     return;
+
   }
+
 
   container.innerHTML =
     levels
       .map(
         ([name, sub]) => `
+
           <button
             type="button"
             class="level-option ${
@@ -667,9 +803,15 @@ function renderLevels() {
             }"
             data-level="${name}"
           >
+
             ${name}
-            <small>${sub}</small>
+
+            <small>
+              ${sub}
+            </small>
+
           </button>
+
         `
       )
       .join('');
@@ -688,19 +830,25 @@ function renderSubjects() {
       '#subjects'
     );
 
+
   if (!container) {
+
     return;
+
   }
+
 
   const subjects =
     subjectsByLevel[
       state.level
     ] || [];
 
+
   const intro =
     document.querySelector(
       '#subjects-intro'
     );
+
 
   if (intro) {
 
@@ -709,13 +857,17 @@ function renderSubjects() {
 
   }
 
+
   container.innerHTML =
     subjects
       .map(
         name => `
+
           <label
             class="subject-option ${
-              state.subjects.includes(name)
+              state.subjects.includes(
+                name
+              )
                 ? 'selected'
                 : ''
             }"
@@ -725,20 +877,28 @@ function renderSubjects() {
               type="checkbox"
               value="${name}"
               ${
-                state.subjects.includes(name)
+                state.subjects.includes(
+                  name
+                )
                   ? 'checked'
                   : ''
               }
             >
 
             <span>
-              <b>${name}</b>
+
+              <b>
+                ${name}
+              </b>
+
               <small>
                 Disponible pour votre niveau
               </small>
+
             </span>
 
           </label>
+
         `
       )
       .join('');
@@ -762,6 +922,7 @@ function getAddressValue() {
       : '';
 
   }
+
 
   return addressSelect
     ? addressSelect.value
@@ -787,9 +948,46 @@ function getSchoolValue() {
 
   }
 
+
   return schoolSelect
     ? schoolSelect.value
     : '';
+
+}
+
+
+/* =========================================================
+   ESCAPE HTML
+   Protection pour l'affichage
+========================================================= */
+
+function escapeHtml(
+  value
+) {
+
+  return String(
+    value ?? ''
+  )
+    .replace(
+      /&/g,
+      '&amp;'
+    )
+    .replace(
+      /</g,
+      '&lt;'
+    )
+    .replace(
+      />/g,
+      '&gt;'
+    )
+    .replace(
+      /"/g,
+      '&quot;'
+    )
+    .replace(
+      /'/g,
+      '&#039;'
+    );
 
 }
 
@@ -801,80 +999,120 @@ function getSchoolValue() {
 function renderRecap() {
 
   if (!form) {
+
     return;
+
   }
 
+
   const d =
-    new FormData(form);
+    new FormData(
+      form
+    );
+
 
   const firstName =
-    d.get('firstName') || '';
+    d.get(
+      'firstName'
+    ) || '';
+
 
   const lastName =
-    d.get('lastName') || '';
+    d.get(
+      'lastName'
+    ) || '';
+
 
   const fullName =
     `${firstName} ${lastName}`.trim();
 
+
   const birthDate =
-    d.get('birthDate') || '';
+    d.get(
+      'birthDate'
+    ) || '';
+
 
   const phone =
-    d.get('studentPhone') || '';
+    d.get(
+      'studentPhone'
+    ) || '';
+
 
   const parentPhoneValue =
-    d.get('parentPhone') || '';
+    d.get(
+      'parentPhone'
+    ) || '';
+
 
   const address =
     getAddressValue();
 
+
   const school =
     getSchoolValue();
+
 
   const recap =
     document.querySelector(
       '#recap'
     );
 
+
   if (!recap) {
+
     return;
+
   }
+
 
   recap.innerHTML = `
 
     <div class="recap-section">
 
-      <h3>Élève</h3>
+      <h3>
+        Élève
+      </h3>
 
       <p>
         <strong>
-          ${fullName}
+          ${escapeHtml(fullName)}
         </strong>
       </p>
 
       <p>
         Date de naissance :
-        ${birthDate || '—'}
+        ${escapeHtml(
+          birthDate || '—'
+        )}
       </p>
 
       <p>
         Téléphone :
-        ${phone || '—'}
+        ${escapeHtml(
+          phone || '—'
+        )}
       </p>
 
       <p>
         Téléphone parent :
-        ${parentPhoneValue || '—'}
+        ${escapeHtml(
+          parentPhoneValue || '—'
+        )}
       </p>
 
       <p>
         Établissement :
-        ${school || '—'}
+        ${escapeHtml(
+          school || '—'
+        )}
       </p>
 
       <p>
         Adresse :
-        ${address || '—'}
+        ${escapeHtml(
+          address || '—'
+        )}
       </p>
 
     </div>
@@ -882,11 +1120,15 @@ function renderRecap() {
 
     <div class="recap-section">
 
-      <h3>Niveau</h3>
+      <h3>
+        Niveau
+      </h3>
 
       <p>
         <strong>
-          ${state.level}
+          ${escapeHtml(
+            state.level
+          )}
         </strong>
       </p>
 
@@ -895,7 +1137,9 @@ function renderRecap() {
 
     <div class="recap-section">
 
-      <h3>Matières choisies</h3>
+      <h3>
+        Matières choisies
+      </h3>
 
       ${
         state.subjects.length
@@ -903,10 +1147,13 @@ function renderRecap() {
           ? state.subjects
               .map(
                 subject => `
+
                   <div class="subject-row">
 
                     <span>
-                      ${subject}
+                      ${escapeHtml(
+                        subject
+                      )}
                     </span>
 
                     <span>
@@ -914,6 +1161,7 @@ function renderRecap() {
                     </span>
 
                   </div>
+
                 `
               )
               .join('')
@@ -937,7 +1185,13 @@ function validate() {
   setError('');
 
 
-  if (state.step === 1) {
+  /* =========================
+     STEP 1
+  ========================= */
+
+  if (
+    state.step === 1
+  ) {
 
     const requiredFields =
       [
@@ -945,6 +1199,7 @@ function validate() {
           '[data-step="1"] [required]'
         )
       ];
+
 
     for (
       const field
@@ -961,7 +1216,9 @@ function validate() {
           'Veuillez compléter tous les champs obligatoires.'
         );
 
+
         field.focus();
+
 
         return false;
 
@@ -980,7 +1237,9 @@ function validate() {
         'Le numéro de téléphone de l’élève doit être au format 0X XX XX XX XX.'
       );
 
+
       studentPhone?.focus();
+
 
       return false;
 
@@ -997,7 +1256,9 @@ function validate() {
         'Le numéro du parent doit être au format 0X XX XX XX XX.'
       );
 
+
       parentPhone?.focus();
+
 
       return false;
 
@@ -1017,7 +1278,9 @@ function validate() {
           'Veuillez préciser votre quartier.'
         );
 
+
         addressOther?.focus();
+
 
         return false;
 
@@ -1039,7 +1302,9 @@ function validate() {
           'Veuillez préciser votre établissement.'
         );
 
+
         schoolOther?.focus();
+
 
         return false;
 
@@ -1050,6 +1315,10 @@ function validate() {
   }
 
 
+  /* =========================
+     STEP 2
+  ========================= */
+
   if (
     state.step === 2 &&
     !state.level
@@ -1059,10 +1328,15 @@ function validate() {
       'Veuillez choisir votre niveau.'
     );
 
+
     return false;
 
   }
 
+
+  /* =========================
+     STEP 3
+  ========================= */
 
   if (
     state.step === 3 &&
@@ -1073,17 +1347,25 @@ function validate() {
       'Sélectionnez au moins une matière.'
     );
 
+
     return false;
 
   }
 
 
-  if (state.step === 4) {
+  /* =========================
+     STEP 4
+  ========================= */
+
+  if (
+    state.step === 4
+  ) {
 
     const confirmation =
       form.querySelector(
         '[name="confirmed"]'
       );
+
 
     if (
       !confirmation ||
@@ -1093,6 +1375,7 @@ function validate() {
       setError(
         'Veuillez confirmer que les informations saisies sont correctes.'
       );
+
 
       return false;
 
@@ -1119,10 +1402,12 @@ document.addEventListener(
         '[data-next]'
       );
 
+
     const back =
       event.target.closest(
         '[data-back]'
       );
+
 
     const level =
       event.target.closest(
@@ -1130,20 +1415,35 @@ document.addEventListener(
       );
 
 
+    /* =========================
+       NIVEAU
+    ========================= */
+
     if (level) {
 
       state.level =
         level.dataset.level;
 
+
       state.subjects =
         [];
 
+
+      state.subjectGroups =
+        [];
+
+
       renderLevels();
+
 
       return;
 
     }
 
+
+    /* =========================
+       CONTINUER
+    ========================= */
 
     if (next) {
 
@@ -1157,16 +1457,22 @@ document.addEventListener(
 
       }
 
+
       return;
 
     }
 
+
+    /* =========================
+       RETOUR
+    ========================= */
 
     if (back) {
 
       showStep(
         state.step - 1
       );
+
 
       return;
 
@@ -1184,6 +1490,11 @@ document.addEventListener(
   'change',
   event => {
 
+
+    /* =========================
+       MATIÈRES
+    ========================= */
+
     if (
       event.target.matches(
         '#subjects input[type="checkbox"]'
@@ -1192,6 +1503,7 @@ document.addEventListener(
 
       const subject =
         event.target.value;
+
 
       if (
         event.target.checked
@@ -1209,7 +1521,9 @@ document.addEventListener(
 
         }
 
-      } else {
+      }
+
+      else {
 
         state.subjects =
           state.subjects.filter(
@@ -1219,12 +1533,18 @@ document.addEventListener(
 
       }
 
+
       renderSubjects();
+
 
       return;
 
     }
 
+
+    /* =========================
+       ADRESSE
+    ========================= */
 
     if (
       event.target ===
@@ -1233,10 +1553,15 @@ document.addEventListener(
 
       toggleOtherFields();
 
+
       return;
 
     }
 
+
+    /* =========================
+       ÉTABLISSEMENT
+    ========================= */
 
     if (
       event.target ===
@@ -1244,6 +1569,7 @@ document.addEventListener(
     ) {
 
       toggleOtherFields();
+
 
       return;
 
@@ -1279,6 +1605,144 @@ document.addEventListener(
 
 
 /* =========================================================
+   RENDER GROUPES PAR MATIÈRE
+========================================================= */
+
+function renderSubjectGroups(
+  groups,
+  fallbackCapacity
+) {
+
+  const container =
+    document.querySelector(
+      '#registration-groups'
+    );
+
+
+  if (!container) {
+
+    console.warn(
+      'Élément #registration-groups absent du HTML.'
+    );
+
+
+    return;
+
+  }
+
+
+  if (
+    !Array.isArray(groups) ||
+    !groups.length
+  ) {
+
+    container.innerHTML = `
+
+      <div class="recap-section">
+
+        <h3>
+          Groupes
+        </h3>
+
+        <p>
+          Groupe en cours d’attribution.
+        </p>
+
+      </div>
+
+    `;
+
+
+    return;
+
+  }
+
+
+  container.innerHTML = `
+
+    <div class="recap-section">
+
+      <h3>
+        Vos groupes par matière
+      </h3>
+
+      <div class="subject-groups-list">
+
+        ${
+          groups
+            .map(
+              item => {
+
+                const subject =
+                  item.subject ||
+                  item.name ||
+                  'Matière';
+
+
+                const groupName =
+                  item.group_name ||
+                  item.groupName ||
+                  '—';
+
+
+                const position =
+                  item.group_position ??
+                  item.groupPosition ??
+                  '—';
+
+
+                const capacity =
+                  item.group_capacity ??
+                  item.groupCapacity ??
+                  fallbackCapacity ??
+                  '—';
+
+
+                return `
+
+                  <div class="subject-row">
+
+                    <span>
+                      <strong>
+                        ${escapeHtml(
+                          subject
+                        )}
+                      </strong>
+                    </span>
+
+                    <span>
+                      ${escapeHtml(
+                        groupName
+                      )}
+
+                      —
+
+                      ${escapeHtml(
+                        position
+                      )}/${escapeHtml(
+                        capacity
+                      )}
+                    </span>
+
+                  </div>
+
+                `;
+
+              }
+            )
+            .join('')
+        }
+
+      </div>
+
+    </div>
+
+  `;
+
+}
+
+
+/* =========================================================
    SUBMIT
 ========================================================= */
 
@@ -1303,8 +1767,22 @@ if (submitButton) {
       }
 
 
+      submitButton.disabled =
+        true;
+
+
+      const oldButtonText =
+        submitButton.innerHTML;
+
+
+      submitButton.innerHTML =
+        'Enregistrement...';
+
+
       const d =
-        new FormData(form);
+        new FormData(
+          form
+        );
 
 
       const code =
@@ -1326,13 +1804,19 @@ if (submitButton) {
         code,
 
         firstName:
-          d.get('firstName'),
+          d.get(
+            'firstName'
+          ),
 
         lastName:
-          d.get('lastName'),
+          d.get(
+            'lastName'
+          ),
 
         birthDate:
-          d.get('birthDate'),
+          d.get(
+            'birthDate'
+          ),
 
         phone:
           getRawPhone(
@@ -1372,11 +1856,9 @@ if (submitButton) {
       };
 
 
-      /* =====================================================
-         ENREGISTREMENT SUPABASE
-      ===================================================== */
+      let result =
+        null;
 
-      let result = null;
 
       try {
 
@@ -1391,17 +1873,21 @@ if (submitButton) {
                 record
               );
 
-        } else if (
+        }
+
+        else if (
           window.NOKHBA_STORE
         ) {
 
           result =
             await window.NOKHBA_STORE
-            .saveRegistration(
-              record
-            );
+              .saveRegistration(
+                record
+              );
 
-        } else {
+        }
+
+        else {
 
           throw new Error(
             'Aucun système de stockage disponible'
@@ -1409,16 +1895,28 @@ if (submitButton) {
 
         }
 
-      } catch (err) {
+      }
+
+      catch (err) {
 
         console.error(
           'Erreur inscription:',
           err
         );
 
+
         setError(
           'Une erreur est survenue. Veuillez réessayer.'
         );
+
+
+        submitButton.disabled =
+          false;
+
+
+        submitButton.innerHTML =
+          oldButtonText;
+
 
         return;
 
@@ -1426,78 +1924,150 @@ if (submitButton) {
 
 
       /* =====================================================
-         RÉCUPÉRATION DU GROUPE
-         
-         SEUL CHANGEMENT :
-         gérer Array / data / group_order
+         RÉCUPÉRATION DES GROUPES PAR MATIÈRE
       ===================================================== */
 
-      let groupData =
-        result;
+      let subjectGroups = [];
 
+
+      /*
+        Format principal retourné par
+        register_nokhba_student
+      */
 
       if (
         Array.isArray(
-          groupData
+          result?.subjects
         )
       ) {
 
-        groupData =
-          groupData[0] || {};
+        subjectGroups =
+          result.subjects;
 
       }
 
 
-      if (
-        groupData?.data &&
-        Array.isArray(
-          groupData.data
-        )
-      ) {
+      /*
+        Compatibilité avec différentes
+        formes de réponse.
+      */
 
-        groupData =
-          groupData.data[0] || {};
-
-      }
       else if (
-        groupData?.data &&
-        typeof groupData.data === 'object'
+        Array.isArray(
+          result?.data?.subjects
+        )
       ) {
 
-        groupData =
-          groupData.data;
+        subjectGroups =
+          result.data.subjects;
 
       }
 
+
+      /*
+        Si le RPC retourne un tableau.
+      */
+
+      else if (
+        Array.isArray(result)
+      ) {
+
+        const first =
+          result[0];
+
+
+        if (
+          Array.isArray(
+            first?.subjects
+          )
+        ) {
+
+          subjectGroups =
+            first.subjects;
+
+        }
+
+        else if (
+          Array.isArray(
+            first?.data?.subjects
+          )
+        ) {
+
+          subjectGroups =
+            first.data.subjects;
+
+        }
+
+      }
+
+
+      /*
+        Sauvegarde dans state
+        pour utilisation éventuelle.
+      */
+
+      state.subjectGroups =
+        subjectGroups;
+
+
+      /* =====================================================
+         ANCIEN GROUPE — COMPATIBILITÉ
+      ===================================================== */
 
       let groupName =
-        groupData?.group_name ||
-        groupData?.groupName ||
+        result?.group_name ||
+        result?.groupName ||
+        result?.data?.group_name ||
+        result?.data?.groupName ||
         '';
 
 
       let groupPosition =
-        groupData?.group_position ||
-        groupData?.groupPosition ||
-        groupData?.group_order ||
-        groupData?.groupOrder ||
+        result?.group_position ||
+        result?.groupPosition ||
+        result?.data?.group_position ||
+        result?.data?.groupPosition ||
         '';
 
 
-      let returnedCapacity =
-        groupData?.group_capacity ||
-        groupData?.groupCapacity ||
-        capacity;
+      /*
+        Si le résultat principal ne contient
+        pas group_name, on prend la première
+        matière comme fallback.
+      */
+
+      if (
+        !groupName &&
+        subjectGroups.length
+      ) {
+
+        const first =
+          subjectGroups[0];
+
+
+        groupName =
+          first.group_name ||
+          first.groupName ||
+          '';
+
+
+        groupPosition =
+          first.group_position ??
+          first.groupPosition ??
+          '';
+
+      }
 
 
       /* =====================================================
-         AFFICHAGE SUCCESS
+         AFFICHAGE NOM
       ===================================================== */
 
       const studentName =
         document.querySelector(
           '#student-name'
         );
+
 
       const registrationCode =
         document.querySelector(
@@ -1508,7 +2078,9 @@ if (submitButton) {
       if (studentName) {
 
         studentName.textContent =
-          d.get('firstName') || '';
+          d.get(
+            'firstName'
+          ) || '';
 
       }
 
@@ -1522,10 +2094,21 @@ if (submitButton) {
 
 
       /* =====================================================
-         AFFICHAGE GROUPE
+         AFFICHAGE GROUPES PAR MATIÈRE
       ===================================================== */
 
-      let groupElement =
+      renderSubjectGroups(
+        subjectGroups,
+        capacity
+      );
+
+
+      /*
+        Ancien élément éventuel
+        #registration-group
+      */
+
+      const groupElement =
         document.querySelector(
           '#registration-group'
         );
@@ -1534,21 +2117,34 @@ if (submitButton) {
       if (groupElement) {
 
         if (
+          subjectGroups.length
+        ) {
+
+          groupElement.hidden =
+            true;
+
+        }
+
+        else if (
           groupName &&
           groupPosition
         ) {
 
           groupElement.textContent =
-            `${groupName} — ${groupPosition}/${returnedCapacity}`;
+            `${groupName} — ${groupPosition}/${capacity}`;
 
-        } else if (
+        }
+
+        else if (
           groupName
         ) {
 
           groupElement.textContent =
-            `Groupe ${groupName}`;
+            groupName;
 
-        } else {
+        }
+
+        else {
 
           groupElement.textContent =
             'Groupe en cours d’attribution';
@@ -1559,7 +2155,7 @@ if (submitButton) {
 
 
       /* =====================================================
-         CACHER FORMULAIRE
+         SUCCÈS
       ===================================================== */
 
       form.hidden =
@@ -1594,9 +2190,20 @@ if (submitButton) {
       }
 
 
+      submitButton.disabled =
+        false;
+
+
+      submitButton.innerHTML =
+        oldButtonText;
+
+
       window.scrollTo({
+
         top: 0,
+
         behavior: 'smooth'
+
       });
 
     }
@@ -1626,20 +2233,27 @@ if (copyButton) {
           '#registration-code'
         )?.textContent || '';
 
+
       try {
 
         await navigator.clipboard
-          .writeText(code);
+          .writeText(
+            code
+          );
+
 
         copyButton.textContent =
           'Code copié ✓';
 
-      } catch {
+      }
+
+      catch {
 
         copyButton.textContent =
           code;
 
       }
+
 
       setTimeout(
         () => {
@@ -1675,14 +2289,22 @@ if (newRegistration) {
 
       form.reset();
 
+
       state.step =
         1;
+
 
       state.level =
         '';
 
+
       state.subjects =
         [];
+
+
+      state.subjectGroups =
+        [];
+
 
       form.hidden =
         false;
@@ -1692,6 +2314,7 @@ if (newRegistration) {
         document.querySelector(
           '#success'
         );
+
 
       if (success) {
 
@@ -1706,6 +2329,7 @@ if (newRegistration) {
           '.progress-wrap'
         );
 
+
       if (progress) {
 
         progress.hidden =
@@ -1714,9 +2338,25 @@ if (newRegistration) {
       }
 
 
+      const groups =
+        document.querySelector(
+          '#registration-groups'
+        );
+
+
+      if (groups) {
+
+        groups.innerHTML =
+          '';
+
+      }
+
+
       toggleOtherFields();
 
+
       renderLevels();
+
 
       showStep(1);
 
