@@ -1,334 +1,525 @@
+/* =========================================================
+   INSTITUT NOKHBA
+   SUPABASE CLIENT
+========================================================= */
+
 (function(){
 
-  const c = window.NOKHBA_SUPABASE || {};
-  const tokenKey = 'nokhba-supabase-session';
+  const c =
+    window.NOKHBA_SUPABASE || {};
 
-  const enabled = Boolean(c.url && c.anonKey);
+  const tokenKey =
+    'nokhba-supabase-session';
 
 
-  let session = JSON.parse(
-    localStorage.getItem(tokenKey) || 'null'
-  );
+  /* =======================================================
+     CONFIGURATION
+  ======================================================= */
 
+  const enabled =
+    Boolean(
+      c.url &&
+      c.anonKey
+    );
+
+
+  let session =
+    JSON.parse(
+      localStorage.getItem(tokenKey) ||
+      'null'
+    );
+
+
+  /* =======================================================
+     AUTH HEADERS
+  ======================================================= */
 
   function authHeaders(){
 
     const headers = {
-      apikey: c.anonKey,
-      'Content-Type': 'application/json'
+
+      apikey:
+        c.anonKey,
+
+      'Content-Type':
+        'application/json'
+
     };
 
-    // Authorization is ONLY sent when there is a real user session.
-    // Public requests use the publishable key through "apikey".
-    if(session?.access_token){
+
+    /*
+      Authorization uniquement
+      lorsqu'une vraie session existe.
+    */
+
+    if (
+      session?.access_token
+    ){
+
       headers.Authorization =
         `Bearer ${session.access_token}`;
+
     }
 
+
     return headers;
+
   }
 
 
-  async function request(path, options = {}){
+  /* =======================================================
+     REQUEST
+  ======================================================= */
+
+  async function request(
+    path,
+    options = {}
+  ){
 
     const headers = {
+
       ...authHeaders(),
-      Prefer: options.prefer || 'return=minimal',
+
+      Prefer:
+        options.prefer ||
+        'return=minimal',
+
       ...(options.headers || {})
+
     };
 
-    const r = await fetch(
-      `${c.url}/rest/v1/${path}`,
-      {
-        ...options,
-        headers
-      }
-    );
 
-    if(!r.ok){
+    const r =
+      await fetch(
 
-      const text = await r.text();
+        `${c.url}/rest/v1/${path}`,
+
+        {
+
+          ...options,
+
+          headers
+
+        }
+
+      );
+
+
+    if (!r.ok){
+
+      const text =
+        await r.text();
+
 
       throw new Error(
-        text || `Supabase error ${r.status}`
+        text ||
+        `Supabase error ${r.status}`
       );
+
     }
 
-    const text = await r.text();
+
+    const text =
+      await r.text();
+
 
     return text
       ? JSON.parse(text)
       : null;
+
   }
 
 
-  async function auth(path, body){
+  /* =======================================================
+     AUTH
+  ======================================================= */
 
-    const r = await fetch(
-      `${c.url}/auth/v1/${path}`,
-      {
-        method: 'POST',
+  async function auth(
+    path,
+    body
+  ){
 
-        headers: {
-          apikey: c.anonKey,
-          'Content-Type': 'application/json'
-        },
+    const r =
+      await fetch(
 
-        body: JSON.stringify(body)
-      }
-    );
+        `${c.url}/auth/v1/${path}`,
+
+        {
+
+          method:
+            'POST',
+
+          headers: {
+
+            apikey:
+              c.anonKey,
+
+            'Content-Type':
+              'application/json'
+
+          },
+
+          body:
+            JSON.stringify(body)
+
+        }
+
+      );
 
 
-    const data = await r.json();
+    const data =
+      await r.json();
 
 
-    if(!r.ok){
+    if (!r.ok){
 
       throw new Error(
+
         data.error_description ||
+
         data.msg ||
+
         data.message ||
+
         'Échec de connexion.'
+
       );
+
     }
 
 
     return data;
+
   }
 
 
-  function setSession(data){
+  /* =======================================================
+     SESSION
+  ======================================================= */
 
-    session = data;
+  function setSession(
+    data
+  ){
+
+    session =
+      data;
+
 
     localStorage.setItem(
       tokenKey,
       JSON.stringify(data)
     );
+
   }
 
 
   function clearSession(){
 
-    session = null;
+    session =
+      null;
+
 
     localStorage.removeItem(
       tokenKey
     );
+
   }
 
+
+  /* =======================================================
+     PUBLIC API
+  ======================================================= */
 
   window.NOKHBA_REMOTE = {
 
     enabled,
 
 
+    /* =====================================================
+       AUTHENTICATION
+    ===================================================== */
+
     isAuthenticated: () =>
-      Boolean(session?.access_token),
+      Boolean(
+        session?.access_token
+      ),
 
 
-    async signIn(email, password){
+    async signIn(
+      email,
+      password
+    ){
 
-      const data = await auth(
-        'token?grant_type=password',
-        {
-          email,
-          password
-        }
+      const data =
+        await auth(
+
+          'token?grant_type=password',
+
+          {
+            email,
+            password
+          }
+
+        );
+
+
+      setSession(
+        data
       );
 
-      setSession(data);
 
       return data;
+
     },
 
 
     signOut(){
 
       clearSession();
+
     },
 
 
-    createRegistration(record){
+    /* =====================================================
+       CREATE REGISTRATION
+       
+       IMPORTANT:
+       Le group et la position sont calculés
+       directement par Supabase.
+    ===================================================== */
 
-      return request(
-        'registrations',
-        {
-          method: 'POST',
+    async createRegistration(
+      record
+    ){
 
-          prefer: 'return=minimal',
+      const result =
+        await request(
 
-          body: JSON.stringify({
+          'rpc/register_nokhba_student',
 
-            code:
-              record.code,
+          {
 
-            first_name:
-              record.firstName,
+            method:
+              'POST',
 
-            last_name:
-              record.lastName,
+            prefer:
+              'return=representation',
 
-            birth_date:
-              record.birthDate,
+            body:
+              JSON.stringify({
 
-            phone:
-              record.phone,
+                p_code:
+                  record.code,
 
-            parent_phone:
-              record.parentPhone,
+                p_first_name:
+                  record.firstName,
 
-            school:
-              record.school,
+                p_last_name:
+                  record.lastName,
 
-            address:
-              record.address,
+                p_phone:
+                  record.phone,
 
-            level:
-              record.level,
+                p_parent_phone:
+                  record.parentPhone,
 
-            subjects:
-              record.subjects,
+                p_school:
+                  record.school,
 
-            status:
-              record.status
+                p_address:
+                  record.address,
 
-          })
-        }
-      );
+                p_level:
+                  record.level,
+
+                p_subjects:
+                  record.subjects,
+
+                p_status:
+                  record.status
+
+              })
+
+          }
+
+        );
+
+
+      /*
+        Le résultat contient :
+
+        group_name
+        group_position
+        group_capacity
+        group_order
+        total_in_group
+      */
+
+      return result;
+
     },
 
+
+    /* =====================================================
+       GET REGISTRATIONS
+    ===================================================== */
 
     async getRegistrations(){
 
-      const rows = await request(
-        'registrations?select=*&order=created_at.desc',
-        {
-          prefer:
-            'return=representation'
-        }
+      const rows =
+        await request(
+
+          'registrations?select=*&order=created_at.desc',
+
+          {
+
+            prefer:
+              'return=representation'
+
+          }
+
+        );
+
+
+      return (
+        rows || []
+      ).map(
+
+        r => ({
+
+          id:
+            r.id,
+
+          code:
+            r.code,
+
+          firstName:
+            r.first_name,
+
+          lastName:
+            r.last_name,
+
+          birthDate:
+            r.birth_date,
+
+          phone:
+            r.phone,
+
+          parentPhone:
+            r.parent_phone,
+
+          school:
+            r.school,
+
+          address:
+            r.address,
+
+          level:
+            r.level,
+
+          subjects:
+            r.subjects || [],
+
+          status:
+            r.status,
+
+          group:
+            r.group_name,
+
+          groupPosition:
+            r.group_position,
+
+          createdAt:
+            new Date(
+              r.created_at
+            ).toLocaleString(
+              'fr-FR'
+            )
+
+        })
+
       );
 
-
-      return (rows || []).map(r => ({
-
-        id:
-          r.id,
-
-        code:
-          r.code,
-
-        firstName:
-          r.first_name,
-
-        lastName:
-          r.last_name,
-
-        birthDate:
-          r.birth_date,
-
-        phone:
-          r.phone,
-
-        parentPhone:
-          r.parent_phone,
-
-        school:
-          r.school,
-
-        address:
-          r.address,
-
-        level:
-          r.level,
-
-        subjects:
-          r.subjects || [],
-
-        status:
-          r.status,
-
-        createdAt:
-          new Date(
-            r.created_at
-          ).toLocaleString('fr-FR')
-
-      }));
     },
 
 
-    async updateStatus(code, status){
+    /* =====================================================
+       UPDATE STATUS
+    ===================================================== */
+
+    async updateStatus(
+      code,
+      status
+    ){
 
       return request(
+
         `registrations?code=eq.${encodeURIComponent(code)}`,
+
         {
-          method: 'PATCH',
+
+          method:
+            'PATCH',
 
           prefer:
-            'return=minimal',
+            'return=representation',
 
           body:
             JSON.stringify({
+
               status
+
             })
+
         }
+
       );
+
     },
 
+
+    /* =====================================================
+       CATALOGUE
+    ===================================================== */
 
     async getCatalogue(){
 
-      const rows = await request(
-        'subject_catalogue?select=level,subjects',
-        {
-          prefer:
-            'return=representation'
-        }
-      );
+      try {
+
+        const rows =
+          await request(
+
+            'catalogue?select=*',
+
+            {
+
+              prefer:
+                'return=representation'
+
+            }
+
+          );
 
 
-      return Object.fromEntries(
-        (rows || []).map(r => [
-          r.level,
-          r.subjects || []
-        ])
-      );
-    },
+        return rows || [];
 
-
-    async saveCatalogue(catalogue){
-
-      const rows =
-        Object.entries(catalogue).map(
-          ([level, subjects]) => ({
-            level,
-            subjects,
-            updated_at:
-              new Date().toISOString()
-          })
-        );
-
-
-      if(rows.length){
-
-        await request(
-          'subject_catalogue?on_conflict=level',
-          {
-            method: 'POST',
-
-            prefer:
-              'resolution=merge-duplicates,return=representation',
-
-            body:
-              JSON.stringify(rows)
-          }
-        );
       }
 
+      catch (error){
 
-      return catalogue;
+        console.warn(
+          'Catalogue Supabase indisponible:',
+          error
+        );
+
+
+        return null;
+
+      }
+
     }
 
   };
+
 
 })();
