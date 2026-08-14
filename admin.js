@@ -472,91 +472,81 @@ function normalizeGroupName(value) {
 }
 
 
+/* =========================================================
+   GROUPES PAR NIVEAU → MATIÈRE → GROUPE
+========================================================= */
+
 function renderGroups() {
 
   if (!groupsAdminEl) return;
 
-
-  /*
-    On récupère uniquement les inscriptions
-    auxquelles un groupe est déjà associé.
-  */
-
-  const groupedRecords =
-    records.filter(
-      r =>
-        r.group !== null &&
-        r.group !== undefined &&
-        r.group !== ''
-    );
-
+  const groupedRecords = records.filter(
+    r =>
+      r.group !== null &&
+      r.group !== undefined &&
+      r.group !== ''
+  );
 
   if (!groupedRecords.length) {
 
     groupsAdminEl.innerHTML = `
-
       <p class="selection-note">
-
         Aucun groupe attribué pour le moment.
-
       </p>
-
     `;
 
     return;
-
   }
 
 
   /*
-    Organisation :
-    
-    Matière
-      Groupe
-        élèves
+    Structure :
 
-    On utilise les matières déjà présentes
-    dans chaque inscription.
+    Niveau
+      Matière
+        Groupe
+          Élèves
   */
 
-  const subjectsMap = {};
+  const levelsMap = {};
 
 
   groupedRecords.forEach(record => {
+
+    const level =
+      String(record.level || 'Niveau non défini');
 
     const subjects =
       Array.isArray(record.subjects)
         ? record.subjects
         : [];
 
-
     const groupName =
       normalizeGroupName(record.group);
+
+
+    if (!levelsMap[level]) {
+      levelsMap[level] = {};
+    }
 
 
     subjects.forEach(subject => {
 
       const subjectName =
-        String(subject);
+        String(subject || 'Matière non définie');
 
 
-      if (!subjectsMap[subjectName]) {
-
-        subjectsMap[subjectName] = {};
-
+      if (!levelsMap[level][subjectName]) {
+        levelsMap[level][subjectName] = {};
       }
 
 
-      if (
-        !subjectsMap[subjectName][groupName]
-      ) {
-
-        subjectsMap[subjectName][groupName] = [];
-
+      if (!levelsMap[level][subjectName][groupName]) {
+        levelsMap[level][subjectName][groupName] = [];
       }
 
 
-      subjectsMap[subjectName][groupName]
+      levelsMap[level][subjectName][groupName]
         .push(record);
 
     });
@@ -564,128 +554,117 @@ function renderGroups() {
   });
 
 
+  /* =======================================================
+     AFFICHAGE
+  ======================================================= */
+
   groupsAdminEl.innerHTML =
-    Object.entries(subjectsMap)
-      .map(
-        ([subject, groups]) => {
+    Object.entries(levelsMap)
+      .map(([level, subjects]) => {
 
-          return `
+        return `
 
-            <article class="registration">
+          <article class="registration">
 
-              <div style="width:100%">
+            <div style="width:100%">
 
-                <h3
-                  style="
-                    margin:0 0 16px;
-                    color:#087fa8;
-                  "
-                >
-                  ${escapeHtml(subject)}
-                </h3>
+              <!-- NIVEAU -->
 
-
-                ${Object.entries(groups)
-                  .map(
-                    ([groupName, students]) => {
-
-                      return `
-
-                        <div
-                          style="
-                            padding:14px 0;
-                            border-top:1px solid #e1e7ea;
-                          "
-                        >
-
-                          <div
-                            style="
-                              display:flex;
-                              justify-content:space-between;
-                              gap:15px;
-                              align-items:center;
-                              margin-bottom:10px;
-                            "
-                          >
-
-                            <strong>
-
-                              ${escapeHtml(groupName)}
-
-                            </strong>
+              <h2
+                style="
+                  margin:0 0 18px;
+                  color:#0b2942;
+                "
+              >
+                ${escapeHtml(level)}
+              </h2>
 
 
-                            <span>
+              <!-- MATIÈRES -->
 
-                              ${students.length}
-                              élève${students.length > 1 ? 's' : ''}
+              ${Object.entries(subjects)
+                .map(([subject, groups]) => {
 
-                            </span>
+                  return `
 
-                          </div>
+                    <div
+                      style="
+                        margin-bottom:18px;
+                        padding:14px;
+                        border:1px solid #e1e7ea;
+                        border-radius:12px;
+                      "
+                    >
+
+                      <!-- MATIÈRE -->
+
+                      <h3
+                        style="
+                          margin:0 0 12px;
+                          color:#087fa8;
+                        "
+                      >
+                        ${escapeHtml(subject)}
+                      </h3>
 
 
-                          <div>
+                      <!-- GROUPES -->
 
-                            ${students
-                              .map(student => `
+                      ${Object.entries(groups)
+                        .map(([groupName, students]) => {
 
-                                <div
-                                  style="
-                                    padding:7px 0;
-                                  "
-                                >
+                          return `
 
-                                  <b>
-                                    ${escapeHtml(
-                                      `${student.firstName || ''} ${student.lastName || ''}`
-                                    )}
-                                  </b>
+                            <div
+                              style="
+                                display:flex;
+                                justify-content:space-between;
+                                align-items:center;
+                                gap:15px;
+                                padding:10px 0;
+                                border-top:1px solid #edf1f3;
+                              "
+                            >
+
+                              <div>
+
+                                <strong>
+                                  ${escapeHtml(groupName)}
+                                </strong>
+
+                              </div>
 
 
-                                  <small
-                                    style="
-                                      display:block;
-                                    "
-                                  >
+                              <strong>
 
-                                    ${escapeHtml(
-                                      student.code || ''
-                                    )}
+                                ${students.length}
+                                élève${students.length > 1 ? 's' : ''}
 
-                                    ${
-                                      student.groupPosition
-                                        ? ` · ${escapeHtml(student.groupPosition)}`
-                                        : ''
-                                    }
+                              </strong>
 
-                                  </small>
+                            </div>
 
-                                </div>
+                          `;
 
-                              `)
-                              .join('')
-                            }
+                        })
+                        .join('')
+                      }
 
-                          </div>
+                    </div>
 
-                        </div>
+                  `;
 
-                      `;
+                })
+                .join('')
+              }
 
-                    }
-                  )
-                  .join('')
-                }
+            </div>
 
-              </div>
+          </article>
 
-            </article>
+        `;
 
-          `;
-
-        }
-      )
+      })
       .join('');
 
 }
