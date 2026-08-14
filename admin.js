@@ -1,94 +1,34 @@
-/* =========================================================
-   INSTITUT NOKHBA
-   ADMIN DASHBOARD
-========================================================= */
-
 const remote = window.NOKHBA_REMOTE;
 
+const initialCatalogue = JSON.parse(
+  JSON.stringify(window.NOKHBA_CATALOG)
+);
 
-/* =========================================================
-   DOM
-========================================================= */
+let savedCatalogue = { ...initialCatalogue };
 
-const loginCard =
-  document.querySelector('#login-card');
+const catalogueEl = document.querySelector('#catalogue');
+const recordsEl = document.querySelector('#registrations');
 
-const dashboardContent =
-  document.querySelector('#dashboard-content');
+const searchEl = document.querySelector('#search');
+const filterEl = document.querySelector('#filter');
+const levelFilterEl = document.querySelector('#level-filter');
 
-const catalogueCard =
-  document.querySelector('#catalogue-card');
+const loginCard = document.querySelector('#login-card');
+const dashboardContent = document.querySelector('#dashboard-content');
+const catalogueCard = document.querySelector('#catalogue-card');
 
-const loginForm =
-  document.querySelector('#login-form');
-
-const loginStatus =
-  document.querySelector('#login-status');
-
-const logoutButton =
-  document.querySelector('#logout');
-
-const recordsEl =
-  document.querySelector('#registrations');
-
-const catalogueEl =
-  document.querySelector('#catalogue');
-
-const searchEl =
-  document.querySelector('#search');
-
-const filterEl =
-  document.querySelector('#filter');
-
-const levelFilterEl =
-  document.querySelector('#level-filter');
-
-const statsEl =
-  document.querySelector('#stats');
-
-const saveButton =
-  document.querySelector('#save');
-
-const catalogueStatus =
-  document.querySelector('#status');
-
-
-/* =========================================================
-   CATALOGUE INITIAL
-========================================================= */
-
-const initialCatalogue =
-  JSON.parse(
-    JSON.stringify(
-      window.NOKHBA_CATALOG || {}
-    )
-  );
-
-
-let savedCatalogue =
-  JSON.parse(
-    JSON.stringify(
-      initialCatalogue
-    )
-  );
-
-
-/* =========================================================
-   RECORDS
-========================================================= */
+const loginStatus = document.querySelector('#login-status');
+const catalogueStatus = document.querySelector('#status');
 
 let records = [];
 
 
 /* =========================================================
-   ESCAPE HTML
+   UTILITAIRE
 ========================================================= */
 
 function escapeHtml(value) {
-
-  return String(
-    value ?? ''
-  ).replace(
+  return String(value).replace(
     /[&<>'"]/g,
     char => ({
       '&': '&amp;',
@@ -98,136 +38,40 @@ function escapeHtml(value) {
       '"': '&quot;'
     }[char])
   );
-
 }
 
 
 /* =========================================================
-   CONVERTIR CATALOGUE SUPABASE
-========================================================= */
-
-function convertCatalogueRows(rows) {
-
-  const catalogue = {};
-
-
-  if (!Array.isArray(rows)) {
-
-    return catalogue;
-
-  }
-
-
-  rows.forEach(row => {
-
-    /*
-      Compatible avec plusieurs noms
-      possibles de colonnes.
-    */
-
-    const level =
-      row.level ||
-      row.niveau ||
-      row.level_name ||
-      row.name;
-
-
-    if (!level) {
-
-      return;
-
-    }
-
-
-    let subjects =
-      row.subjects ||
-      row.matieres ||
-      row.subject ||
-      [];
-
-
-    if (typeof subjects === 'string') {
-
-      subjects =
-        subjects
-          .split(',')
-          .map(
-            item => item.trim()
-          )
-          .filter(Boolean);
-
-    }
-
-
-    if (!Array.isArray(subjects)) {
-
-      subjects = [];
-
-    }
-
-
-    catalogue[level] =
-      subjects;
-
-  });
-
-
-  return catalogue;
-
-}
-
-
-/* =========================================================
-   AFFICHAGE CATALOGUE
+   CATALOGUE
 ========================================================= */
 
 function showCatalogue() {
 
-  if (!catalogueEl) {
-
-    return;
-
-  }
-
+  if (!catalogueEl) return;
 
   catalogueEl.innerHTML =
-    Object.entries(
-      savedCatalogue
-    )
-      .map(
-        ([level, subjects]) => `
+    Object.entries(savedCatalogue)
+      .map(([level, subjects]) => {
 
+        return `
           <label>
-
-            <b>
-              ${escapeHtml(level)}
-            </b>
+            <b>${escapeHtml(level)}</b>
 
             <textarea
               data-level="${escapeHtml(level)}"
               rows="3"
-            >${escapeHtml(
-              Array.isArray(subjects)
-                ? subjects.join(', ')
-                : ''
-            )}</textarea>
+            >${escapeHtml(subjects.join(', '))}</textarea>
 
             <small>
               Séparez les matières par une virgule.
             </small>
-
           </label>
+        `;
 
-        `
-      )
+      })
       .join('');
-
 }
 
-
-/* =========================================================
-   CHARGER CATALOGUE SUPABASE
-========================================================= */
 
 async function loadCatalogue() {
 
@@ -236,445 +80,304 @@ async function loadCatalogue() {
     const remoteCatalogue =
       await remote.getCatalogue();
 
-
     /*
-      Si Supabase retourne un tableau,
-      on le convertit en objet.
+      Le client Supabase retourne un tableau.
+      On ne modifie pas la logique actuelle du formulaire.
     */
 
-    const converted =
-      convertCatalogueRows(
-        remoteCatalogue
-      );
-
-
     if (
-      Object.keys(
-        converted
-      ).length
+      Array.isArray(remoteCatalogue) &&
+      remoteCatalogue.length
     ) {
 
-      savedCatalogue = {
+      remoteCatalogue.forEach(row => {
 
-        ...savedCatalogue,
+        /*
+          Compatibilité avec plusieurs noms possibles
+          sans toucher au catalogue local.
+        */
 
-        ...converted
+        const level =
+          row.level ||
+          row.niveau;
 
-      };
+        const subjects =
+          row.subjects ||
+          row.matières ||
+          row.matieres;
+
+        if (
+          level &&
+          Array.isArray(subjects)
+        ) {
+
+          savedCatalogue[level] =
+            subjects;
+
+        }
+
+      });
 
     }
 
-  }
-
-  catch (error) {
+  } catch (error) {
 
     console.warn(
-      'Catalogue distant indisponible:',
+      'Catalogue Supabase indisponible :',
       error
     );
 
   }
 
-
   showCatalogue();
-
 }
 
 
 /* =========================================================
-   NIVEAUX DU FILTRE
+   NIVEAUX
 ========================================================= */
 
 function renderLevelFilter() {
 
-  if (!levelFilterEl) {
-
-    return;
-
-  }
-
-
   const selected =
     levelFilterEl.value;
 
-
   const levels =
-    [
-      ...new Set(
-        records
-          .map(
-            record => record.level
-          )
-          .filter(Boolean)
-      )
-    ]
-      .sort();
-
+    [...new Set(
+      records
+        .map(r => r.level)
+        .filter(Boolean)
+    )].sort();
 
   levelFilterEl.innerHTML = `
-
     <option value="">
       Tous les niveaux
     </option>
 
-    ${
-      levels
-        .map(
-          level => `
-
-            <option
-              value="${escapeHtml(level)}"
-              ${
-                level === selected
-                  ? 'selected'
-                  : ''
-              }
-            >
-              ${escapeHtml(level)}
-            </option>
-
-          `
-        )
-        .join('')
+    ${levels
+      .map(level => `
+        <option
+          value="${escapeHtml(level)}"
+          ${level === selected ? 'selected' : ''}
+        >
+          ${escapeHtml(level)}
+        </option>
+      `)
+      .join('')
     }
-
   `;
-
 }
 
 
 /* =========================================================
-   AFFICHER STATISTIQUES
-========================================================= */
-
-function renderStats() {
-
-  if (!statsEl) {
-
-    return;
-
-  }
-
-
-  const pending =
-    records.filter(
-      record =>
-        record.status === 'En attente'
-    ).length;
-
-
-  const confirmed =
-    records.filter(
-      record =>
-        record.status === 'Confirmée'
-    ).length;
-
-
-  statsEl.innerHTML = `
-
-    <div>
-      <b>
-        ${records.length}
-      </b>
-
-      <small>
-        Total
-      </small>
-    </div>
-
-
-    <div>
-      <b>
-        ${pending}
-      </b>
-
-      <small>
-        En attente
-      </small>
-    </div>
-
-
-    <div>
-      <b>
-        ${confirmed}
-      </b>
-
-      <small>
-        Confirmées
-      </small>
-    </div>
-
-  `;
-
-}
-
-
-/* =========================================================
-   AFFICHER INSCRIPTIONS
+   AFFICHAGE DES INSCRIPTIONS
 ========================================================= */
 
 function renderRecords() {
 
-  if (!recordsEl) {
-
-    return;
-
-  }
-
-
   renderLevelFilter();
 
-  renderStats();
-
-
   const query =
-    searchEl
-      ? searchEl.value
-          .trim()
-          .toLowerCase()
-      : '';
-
+    searchEl.value
+      .trim()
+      .toLowerCase();
 
   const status =
-    filterEl
-      ? filterEl.value
-      : '';
-
+    filterEl.value;
 
   const level =
-    levelFilterEl
-      ? levelFilterEl.value
-      : '';
+    levelFilterEl.value;
 
 
   const filtered =
     records
 
       .filter(
-        record =>
+        r =>
           !status ||
-          record.status === status
+          r.status === status
       )
 
       .filter(
-        record =>
+        r =>
           !level ||
-          record.level === level
+          r.level === level
       )
 
-      .filter(
-        record => {
+      .filter(r => {
 
-          const text = `
+        const text = `
+          ${r.code || ''}
+          ${r.firstName || ''}
+          ${r.lastName || ''}
+        `.toLowerCase();
 
-            ${record.code || ''}
+        return text.includes(query);
 
-            ${record.firstName || ''}
-
-            ${record.lastName || ''}
-
-          `
-            .toLowerCase();
+      });
 
 
-          return text.includes(
-            query
-          );
+  /* =======================================================
+     STATISTIQUES
+  ======================================================= */
 
+  document.querySelector('#stats').innerHTML = `
+
+    <div>
+      <b>${records.length}</b>
+      <small>Total</small>
+    </div>
+
+    <div>
+      <b>
+        ${
+          records.filter(
+            r => r.status === 'En attente'
+          ).length
         }
+      </b>
 
-      );
+      <small>En attente</small>
+    </div>
 
+    <div>
+      <b>
+        ${
+          records.filter(
+            r => r.status === 'Confirmée'
+          ).length
+        }
+      </b>
+
+      <small>Confirmées</small>
+    </div>
+
+  `;
+
+
+  /* =======================================================
+     LISTE
+  ======================================================= */
 
   if (!filtered.length) {
 
     recordsEl.innerHTML = `
-
       <p class="selection-note">
         Aucune inscription ne correspond à votre recherche.
       </p>
-
     `;
 
-
     return;
-
   }
 
 
   recordsEl.innerHTML =
     filtered
-      .map(
-        record => {
+      .map(r => {
 
-          const subjects =
-            Array.isArray(
-              record.subjects
-            )
-              ? record.subjects
-              : [];
+        const subjects =
+          Array.isArray(r.subjects)
+            ? r.subjects
+            : [];
 
+        return `
 
-          return `
+          <article class="registration">
 
-            <article
-              class="registration"
-            >
+            <div>
 
-              <div>
+              <strong>
+                ${escapeHtml(
+                  `${r.firstName || ''} ${r.lastName || ''}`
+                )}
+              </strong>
 
-                <strong>
-                  ${escapeHtml(
-                    record.firstName
-                  )}
-                  ${escapeHtml(
-                    record.lastName
-                  )}
-                </strong>
+              <small>
+                ${escapeHtml(r.code || '')}
+                ·
+                ${escapeHtml(r.createdAt || '')}
+              </small>
 
+              <p>
+                ${escapeHtml(r.level || '')}
+                ·
+                ${subjects
+                  .map(escapeHtml)
+                  .join(', ')
+                }
+              </p>
 
-                <small>
-
-                  ${escapeHtml(
-                    record.code
-                  )}
-
-                  ·
-
-                  ${escapeHtml(
-                    record.createdAt
-                  )}
-
-                </small>
+            </div>
 
 
-                <p>
+            <label>
 
-                  ${escapeHtml(
-                    record.level
-                  )}
+              Statut
 
-                  ·
+              <select
+                data-code="${escapeHtml(r.code)}"
+              >
 
-                  ${
-                    subjects
-                      .map(
-                        escapeHtml
-                      )
-                      .join(', ')
-                  }
-
-                </p>
-
-              </div>
-
-
-              <label>
-
-                Statut
-
-                <select
-                  data-code="${escapeHtml(
-                    record.code
-                  )}"
+                <option
+                  value="En attente"
+                  ${r.status === 'En attente' ? 'selected' : ''}
                 >
+                  En attente
+                </option>
 
-                  <option
-                    ${
-                      record.status ===
-                      'En attente'
-                        ? 'selected'
-                        : ''
-                    }
-                  >
-                    En attente
-                  </option>
+                <option
+                  value="Confirmée"
+                  ${r.status === 'Confirmée' ? 'selected' : ''}
+                >
+                  Confirmée
+                </option>
 
+                <option
+                  value="Refusée"
+                  ${r.status === 'Refusée' ? 'selected' : ''}
+                >
+                  Refusée
+                </option>
 
-                  <option
-                    ${
-                      record.status ===
-                      'Confirmée'
-                        ? 'selected'
-                        : ''
-                    }
-                  >
-                    Confirmée
-                  </option>
+              </select>
 
+            </label>
 
-                  <option
-                    ${
-                      record.status ===
-                      'Refusée'
-                        ? 'selected'
-                        : ''
-                    }
-                  >
-                    Refusée
-                  </option>
+          </article>
 
-                </select>
+        `;
 
-              </label>
-
-            </article>
-
-          `;
-
-        }
-      )
+      })
       .join('');
-
 }
 
 
 /* =========================================================
-   CHARGER INSCRIPTIONS
+   CHARGER LES INSCRIPTIONS
 ========================================================= */
 
 async function loadRecords() {
-
-  if (!remote) {
-
-    return;
-
-  }
-
 
   try {
 
     records =
       await remote.getRegistrations();
 
-
-    if (!Array.isArray(records)) {
-
-      records = [];
-
-    }
-
-
     renderRecords();
 
-  }
-
-  catch (error) {
+  } catch (error) {
 
     console.error(
-      'Erreur chargement inscriptions:',
+      'Erreur chargement inscriptions :',
       error
     );
 
+    records = [];
 
     recordsEl.innerHTML = `
-
       <p class="form-error">
-
         Impossible de charger les inscriptions.
-
       </p>
-
     `;
 
   }
@@ -688,17 +391,11 @@ async function loadRecords() {
 
 function openDashboard() {
 
-  loginCard.hidden =
-    true;
+  loginCard.hidden = true;
 
+  dashboardContent.hidden = false;
 
-  dashboardContent.hidden =
-    false;
-
-
-  catalogueCard.hidden =
-    false;
-
+  catalogueCard.hidden = false;
 
   loadCatalogue();
 
@@ -711,69 +408,39 @@ function openDashboard() {
    LOGIN
 ========================================================= */
 
-if (loginForm) {
-
-  loginForm.addEventListener(
+document
+  .querySelector('#login-form')
+  .addEventListener(
     'submit',
     async event => {
 
       event.preventDefault();
 
-
-      if (!remote?.enabled) {
-
-        loginStatus.textContent =
-          'Supabase n’est pas configuré.';
-
-        return;
-
-      }
-
-
       loginStatus.textContent =
         'Connexion…';
-
-
-      const email =
-        document
-          .querySelector(
-            '#admin-email'
-          )
-          ?.value
-          .trim();
-
-
-      const password =
-        document
-          .querySelector(
-            '#admin-password'
-          )
-          ?.value;
-
 
       try {
 
         await remote.signIn(
-          email,
-          password
+
+          document
+            .querySelector('#admin-email')
+            .value
+            .trim(),
+
+          document
+            .querySelector('#admin-password')
+            .value
+
         );
 
-
-        loginStatus.textContent =
-          '';
-
+        loginStatus.textContent = '';
 
         openDashboard();
 
-      }
+      } catch (error) {
 
-      catch (error) {
-
-        console.error(
-          'Erreur connexion:',
-          error
-        );
-
+        console.error(error);
 
         loginStatus.textContent =
           error.message ||
@@ -784,16 +451,14 @@ if (loginForm) {
     }
   );
 
-}
-
 
 /* =========================================================
    LOGOUT
 ========================================================= */
 
-if (logoutButton) {
-
-  logoutButton.addEventListener(
+document
+  .querySelector('#logout')
+  .addEventListener(
     'click',
     () => {
 
@@ -804,228 +469,140 @@ if (logoutButton) {
     }
   );
 
-}
+
+/* =========================================================
+   CHANGEMENT DE STATUT
+========================================================= */
+
+recordsEl.addEventListener(
+  'change',
+  async event => {
+
+    if (
+      !event.target.matches('[data-code]')
+    ) {
+      return;
+    }
+
+    const select =
+      event.target;
+
+    const code =
+      select.dataset.code;
+
+    const status =
+      select.value;
+
+
+    select.disabled = true;
+
+
+    try {
+
+      await remote.updateStatus(
+        code,
+        status
+      );
+
+      await loadRecords();
+
+    } catch (error) {
+
+      console.error(error);
+
+      alert(
+        'Impossible de mettre à jour le statut.'
+      );
+
+      await loadRecords();
+
+    }
+
+  }
+);
 
 
 /* =========================================================
-   SAUVEGARDER CATALOGUE
+   FILTRES
 ========================================================= */
 
-if (saveButton) {
+searchEl.addEventListener(
+  'input',
+  renderRecords
+);
 
-  saveButton.addEventListener(
+filterEl.addEventListener(
+  'change',
+  renderRecords
+);
+
+levelFilterEl.addEventListener(
+  'change',
+  renderRecords
+);
+
+
+/* =========================================================
+   CATALOGUE
+========================================================= */
+
+document
+  .querySelector('#save')
+  .addEventListener(
     'click',
     async () => {
 
+      /*
+        On conserve la modification locale
+        sans toucher à la logique des groupes.
+
+        Le supabase-client actuel ne fournit pas encore
+        saveCatalogue(), donc on ne lance pas un appel
+        inexistant.
+      */
+
       document
-        .querySelectorAll(
-          '#catalogue [data-level]'
-        )
-        .forEach(
-          field => {
+        .querySelectorAll('[data-level]')
+        .forEach(field => {
 
-            savedCatalogue[
-              field.dataset.level
-            ] =
-              field.value
+          savedCatalogue[
+            field.dataset.level
+          ] =
+            field.value
+              .split(',')
+              .map(x => x.trim())
+              .filter(Boolean);
 
-                .split(',')
+        });
 
-                .map(
-                  item =>
-                    item.trim()
-                )
 
-                .filter(Boolean);
+      /*
+        Sauvegarde locale uniquement pour l'instant.
+      */
 
-          }
-        );
+      localStorage.setItem(
+        'nokhba-catalogue',
+        JSON.stringify(savedCatalogue)
+      );
 
 
       catalogueStatus.textContent =
-        'Enregistrement…';
-
-
-      try {
-
-        /*
-          IMPORTANT :
-          Le client Supabase actuel
-          n'avait pas saveCatalogue().
-          
-          On ne fait donc PAS d'appel
-          inexistant qui provoquerait
-          une erreur JS.
-        */
-
-        localStorage.setItem(
-          'nokhba-catalogue',
-          JSON.stringify(
-            savedCatalogue
-          )
-        );
-
-
-        /*
-          Si une fonction saveCatalogue
-          existe dans une future version
-          du client, elle sera utilisée.
-        */
-
-        if (
-          typeof remote.saveCatalogue ===
-          'function'
-        ) {
-
-          await remote.saveCatalogue(
-            savedCatalogue
-          );
-
-        }
-
-
-        catalogueStatus.textContent =
-          'Matières enregistrées ✓';
-
-      }
-
-      catch (error) {
-
-        console.error(
-          'Erreur catalogue:',
-          error
-        );
-
-
-        catalogueStatus.textContent =
-          'Impossible d’enregistrer les matières.';
-
-      }
+        'Matières enregistrées sur cet appareil ✓';
 
     }
   );
-
-}
-
-
-/* =========================================================
-   CHANGEMENT STATUT
-========================================================= */
-
-if (recordsEl) {
-
-  recordsEl.addEventListener(
-    'change',
-    async event => {
-
-      if (
-        !event.target.matches(
-          '[data-code]'
-        )
-      ) {
-
-        return;
-
-      }
-
-
-      const code =
-        event.target.dataset.code;
-
-
-      const status =
-        event.target.value;
-
-
-      event.target.disabled =
-        true;
-
-
-      try {
-
-        await remote.updateStatus(
-          code,
-          status
-        );
-
-
-        await loadRecords();
-
-      }
-
-      catch (error) {
-
-        console.error(
-          'Erreur statut:',
-          error
-        );
-
-
-        alert(
-          'Impossible de mettre à jour le statut.'
-        );
-
-
-        await loadRecords();
-
-      }
-
-    }
-  );
-
-}
-
-
-/* =========================================================
-   RECHERCHE
-========================================================= */
-
-if (searchEl) {
-
-  searchEl.addEventListener(
-    'input',
-    renderRecords
-  );
-
-}
-
-
-if (filterEl) {
-
-  filterEl.addEventListener(
-    'change',
-    renderRecords
-  );
-
-}
-
-
-if (levelFilterEl) {
-
-  levelFilterEl.addEventListener(
-    'change',
-    renderRecords
-  );
-
-}
 
 
 /* =========================================================
    INITIALISATION
 ========================================================= */
 
-if (!remote?.enabled) {
+if (!remote.enabled) {
 
-  if (loginStatus) {
+  loginStatus.textContent =
+    'Supabase n’est pas configuré.';
 
-    loginStatus.textContent =
-      'Supabase n’est pas configuré.';
-
-  }
-
-}
-
-else if (
+} else if (
   remote.isAuthenticated()
 ) {
 
