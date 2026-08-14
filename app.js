@@ -281,10 +281,6 @@ function findOtherField(
 
 function initOtherFields() {
 
-  /* =========================
-     ADRESSE
-  ========================= */
-
   const addressExisting =
     findOtherField(
       addressSelect,
@@ -331,10 +327,6 @@ function initOtherFields() {
 
   }
 
-
-  /* =========================
-     ÉTABLISSEMENT
-  ========================= */
 
   const schoolExisting =
     findOtherField(
@@ -393,10 +385,6 @@ function initOtherFields() {
 
 function toggleOtherFields() {
 
-  /* =========================
-     ADRESSE
-  ========================= */
-
   if (
     addressSelect &&
     addressOtherWrapper &&
@@ -429,10 +417,6 @@ function toggleOtherFields() {
 
   }
 
-
-  /* =========================
-     ÉTABLISSEMENT
-  ========================= */
 
   if (
     schoolSelect &&
@@ -953,10 +937,6 @@ function validate() {
   setError('');
 
 
-  /* =========================
-     STEP 1
-  ========================= */
-
   if (state.step === 1) {
 
     const requiredFields =
@@ -1070,10 +1050,6 @@ function validate() {
   }
 
 
-  /* =========================
-     STEP 2
-  ========================= */
-
   if (
     state.step === 2 &&
     !state.level
@@ -1088,10 +1064,6 @@ function validate() {
   }
 
 
-  /* =========================
-     STEP 3
-  ========================= */
-
   if (
     state.step === 3 &&
     !state.subjects.length
@@ -1105,10 +1077,6 @@ function validate() {
 
   }
 
-
-  /* =========================
-     STEP 4
-  ========================= */
 
   if (state.step === 4) {
 
@@ -1162,10 +1130,6 @@ document.addEventListener(
       );
 
 
-    /* =========================
-       NIVEAU
-    ========================= */
-
     if (level) {
 
       state.level =
@@ -1180,10 +1144,6 @@ document.addEventListener(
 
     }
 
-
-    /* =========================
-       CONTINUER
-    ========================= */
 
     if (next) {
 
@@ -1201,10 +1161,6 @@ document.addEventListener(
 
     }
 
-
-    /* =========================
-       RETOUR
-    ========================= */
 
     if (back) {
 
@@ -1227,11 +1183,6 @@ document.addEventListener(
 document.addEventListener(
   'change',
   event => {
-
-
-    /* =========================
-       MATIÈRES
-    ========================= */
 
     if (
       event.target.matches(
@@ -1275,10 +1226,6 @@ document.addEventListener(
     }
 
 
-    /* =========================
-       ADRESSE
-    ========================= */
-
     if (
       event.target ===
       addressSelect
@@ -1290,10 +1237,6 @@ document.addEventListener(
 
     }
 
-
-    /* =========================
-       ÉTABLISSEMENT
-    ========================= */
 
     if (
       event.target ===
@@ -1372,10 +1315,6 @@ if (submitButton) {
         )}`;
 
 
-      /* =====================================================
-         CAPACITÉ DU GROUPE
-      ===================================================== */
-
       const capacity =
         groupCapacity[
           state.level
@@ -1427,7 +1366,6 @@ if (submitButton) {
         createdAt:
           new Date().toISOString(),
 
-        /* données utilisées par le système de groupes */
         groupCapacity:
           capacity
 
@@ -1489,44 +1427,67 @@ if (submitButton) {
 
       /* =====================================================
          RÉCUPÉRATION DU GROUPE
+         
+         SEUL CHANGEMENT :
+         gérer Array / data / group_order
       ===================================================== */
 
-      let groupName =
-        result?.group_name ||
-        result?.groupName ||
-        result?.data?.group_name ||
-        result?.data?.groupName ||
-        '';
-
-      let groupPosition =
-  result?.group_position ||
-  result?.groupPosition ||
-  result?.group_order ||
-  result?.groupOrder ||
-  result?.data?.group_position ||
-  result?.data?.groupPosition ||
-  result?.data?.group_order ||
-  result?.data?.groupOrder ||
-  '';
+      let groupData =
+        result;
 
 
-      /*
-        Si Supabase retourne le groupe,
-        on l'utilise directement.
+      if (
+        Array.isArray(
+          groupData
+        )
+      ) {
 
-        Exemple :
-        G1 / 20
-        G2 / 1
-      */
-
-
-      if (!groupName) {
-
-        console.warn(
-          'Le groupe n’a pas été retourné par Supabase.'
-        );
+        groupData =
+          groupData[0] || {};
 
       }
+
+
+      if (
+        groupData?.data &&
+        Array.isArray(
+          groupData.data
+        )
+      ) {
+
+        groupData =
+          groupData.data[0] || {};
+
+      }
+      else if (
+        groupData?.data &&
+        typeof groupData.data === 'object'
+      ) {
+
+        groupData =
+          groupData.data;
+
+      }
+
+
+      let groupName =
+        groupData?.group_name ||
+        groupData?.groupName ||
+        '';
+
+
+      let groupPosition =
+        groupData?.group_position ||
+        groupData?.groupPosition ||
+        groupData?.group_order ||
+        groupData?.groupOrder ||
+        '';
+
+
+      let returnedCapacity =
+        groupData?.group_capacity ||
+        groupData?.groupCapacity ||
+        capacity;
 
 
       /* =====================================================
@@ -1570,11 +1531,6 @@ if (submitButton) {
         );
 
 
-      /*
-        Si l'élément existe déjà dans index.html,
-        on affiche le groupe.
-      */
-
       if (groupElement) {
 
         if (
@@ -1583,12 +1539,14 @@ if (submitButton) {
         ) {
 
           groupElement.textContent =
-            `${groupName} — ${groupPosition}/${capacity}`;
+            `${groupName} — ${groupPosition}/${returnedCapacity}`;
 
-        } else if (groupName) {
+        } else if (
+          groupName
+        ) {
 
           groupElement.textContent =
-            groupName;
+            `Groupe ${groupName}`;
 
         } else {
 
