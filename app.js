@@ -1625,7 +1625,6 @@ function renderSubjectGroups(
       'Élément #registration-groups absent du HTML.'
     );
 
-
     return;
 
   }
@@ -1641,7 +1640,7 @@ function renderSubjectGroups(
       <div class="recap-section">
 
         <h3>
-          Groupes
+          Vos groupes par matière
         </h3>
 
         <p>
@@ -1651,7 +1650,6 @@ function renderSubjectGroups(
       </div>
 
     `;
-
 
     return;
 
@@ -1670,66 +1668,58 @@ function renderSubjectGroups(
 
         ${
           groups
-            .map(
-              item => {
+            .map(item => {
 
-                const subject =
-                  item.subject ||
-                  item.name ||
-                  'Matière';
-
-
-                const groupName =
-                  item.group_name ||
-                  item.groupName ||
-                  '—';
+              const subject =
+                item.subject ||
+                item.name ||
+                item.matiere ||
+                'Matière';
 
 
-                const position =
-                  item.group_position ??
-                  item.groupPosition ??
-                  '—';
+              const groupName =
+                item.group_name ||
+                item.groupName ||
+                item.groupe ||
+                '—';
 
 
-                const capacity =
-                  item.group_capacity ??
-                  item.groupCapacity ??
-                  fallbackCapacity ??
-                  '—';
+              const position =
+                item.group_position ??
+                item.groupPosition ??
+                item.position ??
+                '—';
 
 
-                return `
+              const capacity =
+                item.group_capacity ??
+                item.groupCapacity ??
+                item.capacity ??
+                fallbackCapacity ??
+                '—';
 
-                  <div class="subject-row">
 
-                    <span>
-                      <strong>
-                        ${escapeHtml(
-                          subject
-                        )}
-                      </strong>
-                    </span>
+              return `
 
-                    <span>
-                      ${escapeHtml(
-                        groupName
-                      )}
+                <div class="subject-row">
 
-                      —
+                  <span>
+                    <strong>
+                      ${escapeHtml(subject)}
+                    </strong>
+                  </span>
 
-                      ${escapeHtml(
-                        position
-                      )}/${escapeHtml(
-                        capacity
-                      )}
-                    </span>
+                  <span>
+                    ${escapeHtml(groupName)}
+                    —
+                    ${escapeHtml(position)}/${escapeHtml(capacity)}
+                  </span>
 
-                  </div>
+                </div>
 
-                `;
+              `;
 
-              }
-            )
+            })
             .join('')
         }
 
@@ -1740,7 +1730,6 @@ function renderSubjectGroups(
   `;
 
 }
-
 
 /* =========================================================
    SUBMIT
