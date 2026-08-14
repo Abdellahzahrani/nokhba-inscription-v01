@@ -1499,11 +1499,15 @@ if (submitButton) {
         '';
 
       let groupPosition =
-        result?.group_position ||
-        result?.groupPosition ||
-        result?.data?.group_position ||
-        result?.data?.groupPosition ||
-        '';
+  result?.group_position ||
+  result?.groupPosition ||
+  result?.group_order ||
+  result?.groupOrder ||
+  result?.data?.group_position ||
+  result?.data?.groupPosition ||
+  result?.data?.group_order ||
+  result?.data?.groupOrder ||
+  '';
 
 
       /*
