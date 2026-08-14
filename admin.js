@@ -1,27 +1,14 @@
+/* =========================================================
+   INSTITUT NOKHBA
+   ADMIN DASHBOARD
+========================================================= */
+
 const remote = window.NOKHBA_REMOTE;
 
-const initialCatalogue = JSON.parse(
-  JSON.stringify(window.NOKHBA_CATALOG || {})
-);
 
-let savedCatalogue = {
-  ...initialCatalogue
-};
-
-const catalogueEl =
-  document.querySelector('#catalogue');
-
-const recordsEl =
-  document.querySelector('#registrations');
-
-const searchEl =
-  document.querySelector('#search');
-
-const filterEl =
-  document.querySelector('#filter');
-
-const levelFilterEl =
-  document.querySelector('#level-filter');
+/* =========================================================
+   DOM
+========================================================= */
 
 const loginCard =
   document.querySelector('#login-card');
@@ -32,6 +19,66 @@ const dashboardContent =
 const catalogueCard =
   document.querySelector('#catalogue-card');
 
+const loginForm =
+  document.querySelector('#login-form');
+
+const loginStatus =
+  document.querySelector('#login-status');
+
+const logoutButton =
+  document.querySelector('#logout');
+
+const recordsEl =
+  document.querySelector('#registrations');
+
+const catalogueEl =
+  document.querySelector('#catalogue');
+
+const searchEl =
+  document.querySelector('#search');
+
+const filterEl =
+  document.querySelector('#filter');
+
+const levelFilterEl =
+  document.querySelector('#level-filter');
+
+const statsEl =
+  document.querySelector('#stats');
+
+const saveButton =
+  document.querySelector('#save');
+
+const catalogueStatus =
+  document.querySelector('#status');
+
+
+/* =========================================================
+   CATALOGUE INITIAL
+========================================================= */
+
+const initialCatalogue =
+  JSON.parse(
+    JSON.stringify(
+      window.NOKHBA_CATALOG || {}
+    )
+  );
+
+
+let savedCatalogue =
+  JSON.parse(
+    JSON.stringify(
+      initialCatalogue
+    )
+  );
+
+
+/* =========================================================
+   RECORDS
+========================================================= */
+
+let records = [];
+
 
 /* =========================================================
    ESCAPE HTML
@@ -39,35 +86,114 @@ const catalogueCard =
 
 function escapeHtml(value) {
 
-  return String(value ?? '')
-    .replace(
-      /[&<>'"]/g,
-      char =>
-        ({
-          '&': '&amp;',
-          '<': '&lt;',
-          '>': '&gt;',
-          "'": '&#39;',
-          '"': '&quot;'
-        }[char])
-    );
+  return String(
+    value ?? ''
+  ).replace(
+    /[&<>'"]/g,
+    char => ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      "'": '&#39;',
+      '"': '&quot;'
+    }[char])
+  );
 
 }
 
 
 /* =========================================================
-   CATALOGUE
+   CONVERTIR CATALOGUE SUPABASE
+========================================================= */
+
+function convertCatalogueRows(rows) {
+
+  const catalogue = {};
+
+
+  if (!Array.isArray(rows)) {
+
+    return catalogue;
+
+  }
+
+
+  rows.forEach(row => {
+
+    /*
+      Compatible avec plusieurs noms
+      possibles de colonnes.
+    */
+
+    const level =
+      row.level ||
+      row.niveau ||
+      row.level_name ||
+      row.name;
+
+
+    if (!level) {
+
+      return;
+
+    }
+
+
+    let subjects =
+      row.subjects ||
+      row.matieres ||
+      row.subject ||
+      [];
+
+
+    if (typeof subjects === 'string') {
+
+      subjects =
+        subjects
+          .split(',')
+          .map(
+            item => item.trim()
+          )
+          .filter(Boolean);
+
+    }
+
+
+    if (!Array.isArray(subjects)) {
+
+      subjects = [];
+
+    }
+
+
+    catalogue[level] =
+      subjects;
+
+  });
+
+
+  return catalogue;
+
+}
+
+
+/* =========================================================
+   AFFICHAGE CATALOGUE
 ========================================================= */
 
 function showCatalogue() {
 
   if (!catalogueEl) {
+
     return;
+
   }
 
 
   catalogueEl.innerHTML =
-    Object.entries(savedCatalogue)
+    Object.entries(
+      savedCatalogue
+    )
       .map(
         ([level, subjects]) => `
 
@@ -78,7 +204,7 @@ function showCatalogue() {
             </b>
 
             <textarea
-              data-catalogue-level="${escapeHtml(level)}"
+              data-level="${escapeHtml(level)}"
               rows="3"
             >${escapeHtml(
               Array.isArray(subjects)
@@ -100,72 +226,41 @@ function showCatalogue() {
 
 
 /* =========================================================
-   CHARGER CATALOGUE
+   CHARGER CATALOGUE SUPABASE
 ========================================================= */
 
 async function loadCatalogue() {
 
   try {
 
+    const remoteCatalogue =
+      await remote.getCatalogue();
+
+
+    /*
+      Si Supabase retourne un tableau,
+      on le convertit en objet.
+    */
+
+    const converted =
+      convertCatalogueRows(
+        remoteCatalogue
+      );
+
+
     if (
-      remote &&
-      remote.getCatalogue
+      Object.keys(
+        converted
+      ).length
     ) {
 
-      const remoteCatalogue =
-        await remote.getCatalogue();
+      savedCatalogue = {
 
+        ...savedCatalogue,
 
-      if (
-        Array.isArray(remoteCatalogue)
-      ) {
+        ...converted
 
-        /*
-          Compatibilité avec une table catalogue
-          retournant des lignes.
-        */
-
-        remoteCatalogue.forEach(
-          row => {
-
-            const level =
-              row.level ||
-              row.niveau;
-
-            const subjects =
-              row.subjects ||
-              row.matieres ||
-              row.subject;
-
-            if (
-              level &&
-              Array.isArray(subjects)
-            ) {
-
-              savedCatalogue[level] =
-                subjects;
-
-            }
-
-          }
-        );
-
-      }
-
-      else if (
-        remoteCatalogue &&
-        typeof remoteCatalogue === 'object'
-      ) {
-
-        savedCatalogue = {
-
-          ...savedCatalogue,
-
-          ...remoteCatalogue
-
-        };
-
-      }
+      };
 
     }
 
@@ -187,20 +282,15 @@ async function loadCatalogue() {
 
 
 /* =========================================================
-   RECORDS
-========================================================= */
-
-let records = [];
-
-
-/* =========================================================
-   LEVEL FILTER
+   NIVEAUX DU FILTRE
 ========================================================= */
 
 function renderLevelFilter() {
 
   if (!levelFilterEl) {
+
     return;
+
   }
 
 
@@ -254,240 +344,64 @@ function renderLevelFilter() {
 
 
 /* =========================================================
-   GROUPES PAR MATIÈRE
+   AFFICHER STATISTIQUES
 ========================================================= */
 
-function getSubjectGroups(record) {
+function renderStats() {
 
-  /*
-    Format principal attendu :
-    record.subjectGroups
-  */
+  if (!statsEl) {
 
-  if (
-    Array.isArray(
-      record.subjectGroups
-    )
-  ) {
-
-    return record.subjectGroups;
+    return;
 
   }
 
 
-  /*
-    Compatibilité éventuelle :
-    groups / groupsBySubject / subjectsGroups
-  */
-
-  if (
-    Array.isArray(
-      record.groups
-    )
-  ) {
-
-    return record.groups;
-
-  }
+  const pending =
+    records.filter(
+      record =>
+        record.status === 'En attente'
+    ).length;
 
 
-  if (
-    Array.isArray(
-      record.groupsBySubject
-    )
-  ) {
-
-    return record.groupsBySubject;
-
-  }
+  const confirmed =
+    records.filter(
+      record =>
+        record.status === 'Confirmée'
+    ).length;
 
 
-  if (
-    Array.isArray(
-      record.subjectsGroups
-    )
-  ) {
+  statsEl.innerHTML = `
 
-    return record.subjectsGroups;
-
-  }
-
-
-  return [];
-
-}
-
-
-/* =========================================================
-   RENDU GROUPES
-========================================================= */
-
-function renderGroups(record) {
-
-  const groups =
-    getSubjectGroups(record);
-
-
-  /*
-    Aucun groupe retourné
-  */
-
-  if (
-    !groups.length
-  ) {
-
-    /*
-      Ancienne compatibilité :
-      groupe global.
-    */
-
-    if (
-      record.group ||
-      record.groupPosition
-    ) {
-
-      return `
-
-        <div class="admin-groups">
-
-          <small>
-            Groupe
-          </small>
-
-          <div class="admin-group-row">
-
-            <strong>
-              ${escapeHtml(
-                record.group || '—'
-              )}
-            </strong>
-
-            ${
-              record.groupPosition
-                ? `<span>
-                    ${escapeHtml(
-                      record.groupPosition
-                    )}
-                  </span>`
-                : ''
-            }
-
-          </div>
-
-        </div>
-
-      `;
-
-    }
-
-
-    return `
-
-      <div class="admin-groups">
-
-        <small>
-          Groupes par matière
-        </small>
-
-        <p class="selection-note">
-          Groupe en cours d’attribution
-        </p>
-
-      </div>
-
-    `;
-
-  }
-
-
-  return `
-
-    <div class="admin-groups">
+    <div>
+      <b>
+        ${records.length}
+      </b>
 
       <small>
-        Groupes par matière
+        Total
       </small>
-
-      <div class="admin-subject-groups">
-
-        ${
-          groups
-            .map(
-              item => {
-
-                const subject =
-                  item.subject ||
-                  item.name ||
-                  item.matiere ||
-                  'Matière';
+    </div>
 
 
-                const groupName =
-                  item.group_name ||
-                  item.groupName ||
-                  item.group ||
-                  '—';
+    <div>
+      <b>
+        ${pending}
+      </b>
+
+      <small>
+        En attente
+      </small>
+    </div>
 
 
-                const position =
-                  item.group_position ??
-                  item.groupPosition ??
-                  item.position ??
-                  '—';
+    <div>
+      <b>
+        ${confirmed}
+      </b>
 
-
-                const capacity =
-                  item.group_capacity ??
-                  item.groupCapacity ??
-                  item.capacity ??
-                  '';
-
-
-                return `
-
-                  <div
-                    class="admin-group-row"
-                  >
-
-                    <span>
-
-                      <strong>
-                        ${escapeHtml(
-                          subject
-                        )}
-                      </strong>
-
-                    </span>
-
-                    <span>
-
-                      ${escapeHtml(
-                        groupName
-                      )}
-
-                      ${
-                        capacity
-                          ? ` — ${escapeHtml(
-                              position
-                            )}/${escapeHtml(
-                              capacity
-                            )}`
-                          : ''
-                      }
-
-                    </span>
-
-                  </div>
-
-                `;
-
-              }
-            )
-            .join('')
-        }
-
-      </div>
-
+      <small>
+        Confirmées
+      </small>
     </div>
 
   `;
@@ -496,17 +410,12 @@ function renderGroups(record) {
 
 
 /* =========================================================
-   RENDER RECORDS
+   AFFICHER INSCRIPTIONS
 ========================================================= */
 
 function renderRecords() {
 
-  if (
-    !recordsEl ||
-    !searchEl ||
-    !filterEl ||
-    !levelFilterEl
-  ) {
+  if (!recordsEl) {
 
     return;
 
@@ -515,19 +424,27 @@ function renderRecords() {
 
   renderLevelFilter();
 
+  renderStats();
+
 
   const query =
-    searchEl.value
-      .trim()
-      .toLowerCase();
+    searchEl
+      ? searchEl.value
+          .trim()
+          .toLowerCase()
+      : '';
 
 
   const status =
-    filterEl.value;
+    filterEl
+      ? filterEl.value
+      : '';
 
 
   const level =
-    levelFilterEl.value;
+    levelFilterEl
+      ? levelFilterEl.value
+      : '';
 
 
   const filtered =
@@ -546,94 +463,39 @@ function renderRecords() {
       )
 
       .filter(
-        record =>
-          `
+        record => {
+
+          const text = `
 
             ${record.code || ''}
+
             ${record.firstName || ''}
+
             ${record.lastName || ''}
 
           `
-            .toLowerCase()
-            .includes(query)
+            .toLowerCase();
+
+
+          return text.includes(
+            query
+          );
+
+        }
+
       );
 
 
-  const stats =
-    document.querySelector(
-      '#stats'
-    );
-
-
-  if (stats) {
-
-    stats.innerHTML = `
-
-      <div>
-
-        <b>
-          ${records.length}
-        </b>
-
-        <small>
-          Total
-        </small>
-
-      </div>
-
-      <div>
-
-        <b>
-          ${
-            records.filter(
-              record =>
-                record.status ===
-                'En attente'
-            ).length
-          }
-        </b>
-
-        <small>
-          En attente
-        </small>
-
-      </div>
-
-      <div>
-
-        <b>
-          ${
-            records.filter(
-              record =>
-                record.status ===
-                'Confirmée'
-            ).length
-          }
-        </b>
-
-        <small>
-          Confirmées
-        </small>
-
-      </div>
-
-    `;
-
-  }
-
-
-  if (
-    !filtered.length
-  ) {
+  if (!filtered.length) {
 
     recordsEl.innerHTML = `
 
       <p class="selection-note">
-        Aucune inscription ne correspond
-        à votre recherche.
+        Aucune inscription ne correspond à votre recherche.
       </p>
 
     `;
+
 
     return;
 
@@ -670,15 +532,21 @@ function renderRecords() {
                   )}
                 </strong>
 
+
                 <small>
+
                   ${escapeHtml(
                     record.code
                   )}
+
                   ·
+
                   ${escapeHtml(
                     record.createdAt
                   )}
+
                 </small>
+
 
                 <p>
 
@@ -689,21 +557,14 @@ function renderRecords() {
                   ·
 
                   ${
-                    subjects.length
-                      ? subjects
-                          .map(
-                            subject =>
-                              escapeHtml(
-                                subject
-                              )
-                          )
-                          .join(', ')
-                      : 'Aucune matière'
+                    subjects
+                      .map(
+                        escapeHtml
+                      )
+                      .join(', ')
                   }
 
                 </p>
-
-                ${renderGroups(record)}
 
               </div>
 
@@ -729,6 +590,7 @@ function renderRecords() {
                     En attente
                   </option>
 
+
                   <option
                     ${
                       record.status ===
@@ -739,6 +601,7 @@ function renderRecords() {
                   >
                     Confirmée
                   </option>
+
 
                   <option
                     ${
@@ -772,27 +635,20 @@ function renderRecords() {
 
 async function loadRecords() {
 
+  if (!remote) {
+
+    return;
+
+  }
+
+
   try {
-
-    if (
-      !remote ||
-      !remote.getRegistrations
-    ) {
-
-      throw new Error(
-        'Supabase indisponible.'
-      );
-
-    }
-
 
     records =
       await remote.getRegistrations();
 
 
-    if (
-      !Array.isArray(records)
-    ) {
+    if (!Array.isArray(records)) {
 
       records = [];
 
@@ -811,22 +667,15 @@ async function loadRecords() {
     );
 
 
-    records = [];
+    recordsEl.innerHTML = `
 
+      <p class="form-error">
 
-    if (recordsEl) {
+        Impossible de charger les inscriptions.
 
-      recordsEl.innerHTML = `
+      </p>
 
-        <p class="form-error">
-
-          Impossible de charger les inscriptions.
-
-        </p>
-
-      `;
-
-    }
+    `;
 
   }
 
@@ -834,33 +683,21 @@ async function loadRecords() {
 
 
 /* =========================================================
-   OPEN DASHBOARD
+   OUVRIR DASHBOARD
 ========================================================= */
 
 function openDashboard() {
 
-  if (loginCard) {
-
-    loginCard.hidden =
-      true;
-
-  }
+  loginCard.hidden =
+    true;
 
 
-  if (dashboardContent) {
-
-    dashboardContent.hidden =
-      false;
-
-  }
+  dashboardContent.hidden =
+    false;
 
 
-  if (catalogueCard) {
-
-    catalogueCard.hidden =
-      false;
-
-  }
+  catalogueCard.hidden =
+    false;
 
 
   loadCatalogue();
@@ -874,12 +711,6 @@ function openDashboard() {
    LOGIN
 ========================================================= */
 
-const loginForm =
-  document.querySelector(
-    '#login-form'
-  );
-
-
 if (loginForm) {
 
   loginForm.addEventListener(
@@ -889,46 +720,47 @@ if (loginForm) {
       event.preventDefault();
 
 
-      const status =
-        document.querySelector(
-          '#login-status'
-        );
+      if (!remote?.enabled) {
 
+        loginStatus.textContent =
+          'Supabase n’est pas configuré.';
 
-      if (status) {
-
-        status.textContent =
-          'Connexion…';
+        return;
 
       }
+
+
+      loginStatus.textContent =
+        'Connexion…';
+
+
+      const email =
+        document
+          .querySelector(
+            '#admin-email'
+          )
+          ?.value
+          .trim();
+
+
+      const password =
+        document
+          .querySelector(
+            '#admin-password'
+          )
+          ?.value;
 
 
       try {
 
         await remote.signIn(
-
-          document
-            .querySelector(
-              '#admin-email'
-            )
-            .value
-            .trim(),
-
-          document
-            .querySelector(
-              '#admin-password'
-            )
-            .value
-
+          email,
+          password
         );
 
 
-        if (status) {
-
-          status.textContent =
-            '';
-
-        }
+        loginStatus.textContent =
+          '';
 
 
         openDashboard();
@@ -943,13 +775,9 @@ if (loginForm) {
         );
 
 
-        if (status) {
-
-          status.textContent =
-            error.message ||
-            'Connexion impossible.';
-
-        }
+        loginStatus.textContent =
+          error.message ||
+          'Connexion impossible.';
 
       }
 
@@ -962,12 +790,6 @@ if (loginForm) {
 /* =========================================================
    LOGOUT
 ========================================================= */
-
-const logoutButton =
-  document.querySelector(
-    '#logout'
-  );
-
 
 if (logoutButton) {
 
@@ -986,14 +808,8 @@ if (logoutButton) {
 
 
 /* =========================================================
-   SAVE CATALOGUE
+   SAUVEGARDER CATALOGUE
 ========================================================= */
-
-const saveButton =
-  document.querySelector(
-    '#save'
-  );
-
 
 if (saveButton) {
 
@@ -1001,34 +817,23 @@ if (saveButton) {
     'click',
     async () => {
 
-      const status =
-        document.querySelector(
-          '#status'
-        );
-
-
-      /*
-        Lire les textarea.
-      */
-
       document
         .querySelectorAll(
-          '[data-catalogue-level]'
+          '#catalogue [data-level]'
         )
         .forEach(
           field => {
 
             savedCatalogue[
-              field.dataset
-                .catalogueLevel
+              field.dataset.level
             ] =
               field.value
 
                 .split(',')
 
                 .map(
-                  value =>
-                    value.trim()
+                  item =>
+                    item.trim()
                 )
 
                 .filter(Boolean);
@@ -1037,46 +842,39 @@ if (saveButton) {
         );
 
 
-      /*
-        Sauvegarde locale
-        pour conserver le comportement
-        actuel du formulaire.
-      */
+      catalogueStatus.textContent =
+        'Enregistrement…';
+
 
       try {
 
+        /*
+          IMPORTANT :
+          Le client Supabase actuel
+          n'avait pas saveCatalogue().
+          
+          On ne fait donc PAS d'appel
+          inexistant qui provoquerait
+          une erreur JS.
+        */
+
         localStorage.setItem(
-
           'nokhba-catalogue',
-
           JSON.stringify(
             savedCatalogue
           )
-
         );
 
-      }
 
-      catch (error) {
-
-        console.warn(
-          'Sauvegarde locale impossible:',
-          error
-        );
-
-      }
-
-
-      /*
-        Sauvegarde Supabase si disponible.
-      */
-
-      try {
+        /*
+          Si une fonction saveCatalogue
+          existe dans une future version
+          du client, elle sera utilisée.
+        */
 
         if (
-          remote &&
           typeof remote.saveCatalogue ===
-            'function'
+          'function'
         ) {
 
           await remote.saveCatalogue(
@@ -1086,29 +884,21 @@ if (saveButton) {
         }
 
 
-        if (status) {
-
-          status.textContent =
-            'Matières enregistrées ✓';
-
-        }
+        catalogueStatus.textContent =
+          'Matières enregistrées ✓';
 
       }
 
       catch (error) {
 
         console.error(
-          'Erreur sauvegarde catalogue:',
+          'Erreur catalogue:',
           error
         );
 
 
-        if (status) {
-
-          status.textContent =
-            'Matières sauvegardées localement. Supabase n’a pas pu être mis à jour.';
-
-        }
+        catalogueStatus.textContent =
+          'Impossible d’enregistrer les matières.';
 
       }
 
@@ -1119,7 +909,7 @@ if (saveButton) {
 
 
 /* =========================================================
-   UPDATE STATUS
+   CHANGEMENT STATUT
 ========================================================= */
 
 if (recordsEl) {
@@ -1147,6 +937,10 @@ if (recordsEl) {
         event.target.value;
 
 
+      event.target.disabled =
+        true;
+
+
       try {
 
         await remote.updateStatus(
@@ -1171,6 +965,9 @@ if (recordsEl) {
           'Impossible de mettre à jour le statut.'
         );
 
+
+        await loadRecords();
+
       }
 
     }
@@ -1180,7 +977,7 @@ if (recordsEl) {
 
 
 /* =========================================================
-   SEARCH / FILTERS
+   RECHERCHE
 ========================================================= */
 
 if (searchEl) {
@@ -1214,19 +1011,10 @@ if (levelFilterEl) {
 
 
 /* =========================================================
-   INIT
+   INITIALISATION
 ========================================================= */
 
-if (
-  !remote ||
-  !remote.enabled
-) {
-
-  const loginStatus =
-    document.querySelector(
-      '#login-status'
-    );
-
+if (!remote?.enabled) {
 
   if (loginStatus) {
 
