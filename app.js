@@ -21,31 +21,6 @@ const levels = [
 
 
 /* =========================================================
-   CAPACITÉ DES GROUPES
-========================================================= */
-
-const groupCapacities = {
-
-  'Primaire': 30,
-
-  '1AC': 40,
-
-  '2AC': 40,
-
-  '3AC': 45,
-
-  'Tronc Commun': 40,
-
-  '1BAC scientifique': 50,
-
-  '1BAC lettres': 50,
-
-  '2BAC': 50
-
-};
-
-
-/* =========================================================
    MATIÈRES
 ========================================================= */
 
@@ -125,11 +100,8 @@ try {
 
   const savedCatalogue =
     JSON.parse(
-      localStorage.getItem(
-        'nokhba-catalogue'
-      ) || 'null'
+      localStorage.getItem('nokhba-catalogue') || 'null'
     );
-
 
   if (savedCatalogue) {
 
@@ -139,7 +111,6 @@ try {
     );
 
   }
-
 
   if (window.NOKHBA_CATALOG) {
 
@@ -165,21 +136,9 @@ try {
 ========================================================= */
 
 const state = {
-
   step: 1,
-
   level: '',
-
-  subjects: [],
-
-  group: '',
-
-  groupPosition: null,
-
-  groupCapacity: null,
-
-  groupOrder: null
-
+  subjects: []
 };
 
 
@@ -188,41 +147,22 @@ const state = {
 ========================================================= */
 
 const form =
-  document.querySelector(
-    '#registration-form'
-  );
-
+  document.querySelector('#registration-form');
 
 const screens =
-  [
-    ...document.querySelectorAll(
-      '.screen'
-    )
-  ];
-
+  [...document.querySelectorAll('.screen')];
 
 const addressSelect =
-  form?.querySelector(
-    '[name="address"]'
-  );
-
+  form?.querySelector('[name="address"]');
 
 const schoolSelect =
-  form?.querySelector(
-    '[name="school"]'
-  );
-
+  form?.querySelector('[name="school"]');
 
 const studentPhone =
-  form?.querySelector(
-    '[name="studentPhone"]'
-  );
-
+  form?.querySelector('[name="studentPhone"]');
 
 const parentPhone =
-  form?.querySelector(
-    '[name="parentPhone"]'
-  );
+  form?.querySelector('[name="parentPhone"]');
 
 
 /* =========================================================
@@ -238,19 +178,13 @@ function getErrorElement() {
 }
 
 
-function setError(
-  message = ''
-) {
+function setError(message = '') {
 
   const el =
     getErrorElement();
 
-
   if (el) {
-
-    el.textContent =
-      message;
-
+    el.textContent = message;
   }
 
 }
@@ -261,13 +195,16 @@ function setError(
 ========================================================= */
 
 let addressOther = null;
-
 let schoolOther = null;
 
 let addressOtherWrapper = null;
-
 let schoolOtherWrapper = null;
 
+
+/*
+  Cherche une case "Précisez..." déjà présente
+  dans index.html.
+*/
 
 function findOtherField(
   select,
@@ -275,33 +212,28 @@ function findOtherField(
 ) {
 
   if (!select) {
-
     return null;
-
   }
 
+
+  /*
+    On cherche dans les labels proches du select.
+  */
 
   const parent =
     select.parentElement;
 
 
   if (!parent) {
-
     return null;
-
   }
 
 
   const labels =
     [
       ...parent.parentElement
-        ? parent.parentElement
-            .querySelectorAll(
-              'label'
-            )
-        : parent.querySelectorAll(
-            'label'
-          )
+        ? parent.parentElement.querySelectorAll('label')
+        : parent.querySelectorAll('label')
     ];
 
 
@@ -318,36 +250,34 @@ function findOtherField(
 
 
   if (!label) {
-
     return null;
-
   }
 
 
   return {
-
-    wrapper:
-      label,
-
+    wrapper: label,
     input:
       label.querySelector(
         'input, textarea'
       )
-
   };
 
 }
 
 
-/* =========================================================
-   INITIALISATION AUTRE
-========================================================= */
+/*
+  Si la case existe déjà dans HTML,
+  on la récupère.
+
+  Si elle n'existe pas,
+  on la crée.
+*/
 
 function initOtherFields() {
 
-  /* -------------------------
+  /* =====================================================
      ADRESSE
-  ------------------------- */
+  ===================================================== */
 
   const addressExisting =
     findOtherField(
@@ -364,14 +294,10 @@ function initOtherFields() {
     addressOther =
       addressExisting.input;
 
-  }
-
-  else if (addressSelect) {
+  } else if (addressSelect) {
 
     const wrapper =
-      document.createElement(
-        'label'
-      );
+      document.createElement('label');
 
 
     wrapper.className =
@@ -379,16 +305,13 @@ function initOtherFields() {
 
 
     wrapper.innerHTML = `
-
       Précisez votre quartier
-
       <input
         type="text"
         name="addressOther"
         placeholder="Écrivez votre quartier"
         autocomplete="off"
       >
-
     `;
 
 
@@ -402,18 +325,15 @@ function initOtherFields() {
     addressOtherWrapper =
       wrapper;
 
-
     addressOther =
-      wrapper.querySelector(
-        'input'
-      );
+      wrapper.querySelector('input');
 
   }
 
 
-  /* -------------------------
+  /* =====================================================
      ÉTABLISSEMENT
-  ------------------------- */
+  ===================================================== */
 
   const schoolExisting =
     findOtherField(
@@ -430,14 +350,10 @@ function initOtherFields() {
     schoolOther =
       schoolExisting.input;
 
-  }
-
-  else if (schoolSelect) {
+  } else if (schoolSelect) {
 
     const wrapper =
-      document.createElement(
-        'label'
-      );
+      document.createElement('label');
 
 
     wrapper.className =
@@ -445,16 +361,13 @@ function initOtherFields() {
 
 
     wrapper.innerHTML = `
-
       Précisez votre établissement
-
       <input
         type="text"
         name="schoolOther"
         placeholder="Écrivez le nom de votre établissement"
         autocomplete="off"
       >
-
     `;
 
 
@@ -468,11 +381,8 @@ function initOtherFields() {
     schoolOtherWrapper =
       wrapper;
 
-
     schoolOther =
-      wrapper.querySelector(
-        'input'
-      );
+      wrapper.querySelector('input');
 
   }
 
@@ -488,9 +398,9 @@ function initOtherFields() {
 
 function toggleOtherFields() {
 
-  /* -------------------------
+  /* =====================================================
      ADRESSE
-  ------------------------- */
+  ===================================================== */
 
   if (
     addressSelect &&
@@ -499,18 +409,16 @@ function toggleOtherFields() {
   ) {
 
     const isOther =
-      addressSelect.value ===
-      'Autre';
+      addressSelect.value === 'Autre';
 
 
-    addressOtherWrapper.style
-      .setProperty(
-        'display',
-        isOther
-          ? 'block'
-          : 'none',
-        'important'
-      );
+    addressOtherWrapper.style.setProperty(
+      'display',
+      isOther
+        ? 'block'
+        : 'none',
+      'important'
+    );
 
 
     addressOther.hidden =
@@ -531,9 +439,9 @@ function toggleOtherFields() {
   }
 
 
-  /* -------------------------
+  /* =====================================================
      ÉTABLISSEMENT
-  ------------------------- */
+  ===================================================== */
 
   if (
     schoolSelect &&
@@ -542,18 +450,16 @@ function toggleOtherFields() {
   ) {
 
     const isOther =
-      schoolSelect.value ===
-      'Autre';
+      schoolSelect.value === 'Autre';
 
 
-    schoolOtherWrapper.style
-      .setProperty(
-        'display',
-        isOther
-          ? 'block'
-          : 'none',
-        'important'
-      );
+    schoolOtherWrapper.style.setProperty(
+      'display',
+      isOther
+        ? 'block'
+        : 'none',
+      'important'
+    );
 
 
     schoolOther.hidden =
@@ -580,16 +486,16 @@ function toggleOtherFields() {
    PHONE
 ========================================================= */
 
-function formatPhone(
-  input
-) {
+function formatPhone(input) {
 
   if (!input) {
-
     return;
-
   }
 
+
+  /*
+    On garde uniquement les chiffres.
+  */
 
   let digits =
     input.value.replace(
@@ -598,12 +504,21 @@ function formatPhone(
     );
 
 
+  /*
+    Maximum 10 chiffres.
+  */
+
   digits =
     digits.substring(
       0,
       10
     );
 
+
+  /*
+    Format:
+    0X XX XX XX XX
+  */
 
   const parts = [];
 
@@ -674,9 +589,7 @@ function formatPhone(
 }
 
 
-function getRawPhone(
-  value
-) {
+function getRawPhone(value) {
 
   return String(
     value || ''
@@ -688,15 +601,18 @@ function getRawPhone(
 }
 
 
-function isValidPhone(
-  value
-) {
+function isValidPhone(value) {
 
   const phone =
-    getRawPhone(
-      value
-    );
+    getRawPhone(value);
 
+
+  /*
+    Maroc:
+    05XXXXXXXX
+    06XXXXXXXX
+    07XXXXXXXX
+  */
 
   return /^0[5-7]\d{8}$/.test(
     phone
@@ -709,21 +625,15 @@ function isValidPhone(
    NAVIGATION
 ========================================================= */
 
-function showStep(
-  step
-) {
+function showStep(step) {
 
   if (step < 1) {
-
     step = 1;
-
   }
 
 
   if (step > 4) {
-
     step = 4;
-
   }
 
 
@@ -750,10 +660,7 @@ function showStep(
       '#steps li'
     )
     .forEach(
-      (
-        li,
-        index
-      ) => {
+      (li, index) => {
 
         li.classList.toggle(
           'active',
@@ -793,11 +700,8 @@ function showStep(
 
 
   window.scrollTo({
-
     top: 0,
-
     behavior: 'smooth'
-
   });
 
 }
@@ -816,9 +720,7 @@ function renderLevels() {
 
 
   if (!container) {
-
     return;
-
   }
 
 
@@ -826,7 +728,6 @@ function renderLevels() {
     levels
       .map(
         ([name, sub]) => `
-
           <button
             type="button"
             class="level-option ${
@@ -836,15 +737,9 @@ function renderLevels() {
             }"
             data-level="${name}"
           >
-
             ${name}
-
-            <small>
-              ${sub}
-            </small>
-
+            <small>${sub}</small>
           </button>
-
         `
       )
       .join('');
@@ -865,9 +760,7 @@ function renderSubjects() {
 
 
   if (!container) {
-
     return;
-
   }
 
 
@@ -895,12 +788,9 @@ function renderSubjects() {
     subjects
       .map(
         name => `
-
           <label
             class="subject-option ${
-              state.subjects.includes(
-                name
-              )
+              state.subjects.includes(name)
                 ? 'selected'
                 : ''
             }"
@@ -910,28 +800,20 @@ function renderSubjects() {
               type="checkbox"
               value="${name}"
               ${
-                state.subjects.includes(
-                  name
-                )
+                state.subjects.includes(name)
                   ? 'checked'
                   : ''
               }
             >
 
             <span>
-
-              <b>
-                ${name}
-              </b>
-
+              <b>${name}</b>
               <small>
                 Disponible pour votre niveau
               </small>
-
             </span>
 
           </label>
-
         `
       )
       .join('');
@@ -947,8 +829,7 @@ function getAddressValue() {
 
   if (
     addressSelect &&
-    addressSelect.value ===
-      'Autre'
+    addressSelect.value === 'Autre'
   ) {
 
     return addressOther
@@ -973,8 +854,7 @@ function getSchoolValue() {
 
   if (
     schoolSelect &&
-    schoolSelect.value ===
-      'Autre'
+    schoolSelect.value === 'Autre'
   ) {
 
     return schoolOther
@@ -998,51 +878,36 @@ function getSchoolValue() {
 function renderRecap() {
 
   if (!form) {
-
     return;
-
   }
 
 
   const d =
-    new FormData(
-      form
-    );
+    new FormData(form);
 
 
   const firstName =
-    d.get(
-      'firstName'
-    ) || '';
+    d.get('firstName') || '';
 
 
   const lastName =
-    d.get(
-      'lastName'
-    ) || '';
+    d.get('lastName') || '';
 
 
   const fullName =
-    `${firstName} ${lastName}`
-      .trim();
+    `${firstName} ${lastName}`.trim();
 
 
   const birthDate =
-    d.get(
-      'birthDate'
-    ) || '';
+    d.get('birthDate') || '';
 
 
   const phone =
-    d.get(
-      'studentPhone'
-    ) || '';
+    d.get('studentPhone') || '';
 
 
   const parentPhoneValue =
-    d.get(
-      'parentPhone'
-    ) || '';
+    d.get('parentPhone') || '';
 
 
   const address =
@@ -1060,9 +925,7 @@ function renderRecap() {
 
 
   if (!recap) {
-
     return;
-
   }
 
 
@@ -1070,9 +933,7 @@ function renderRecap() {
 
     <div class="recap-section">
 
-      <h3>
-        Élève
-      </h3>
+      <h3>Élève</h3>
 
       <p>
         <strong>
@@ -1110,9 +971,7 @@ function renderRecap() {
 
     <div class="recap-section">
 
-      <h3>
-        Niveau
-      </h3>
+      <h3>Niveau</h3>
 
       <p>
         <strong>
@@ -1125,9 +984,7 @@ function renderRecap() {
 
     <div class="recap-section">
 
-      <h3>
-        Matières choisies
-      </h3>
+      <h3>Matières choisies</h3>
 
       ${
         state.subjects.length
@@ -1135,7 +992,6 @@ function renderRecap() {
           ? state.subjects
               .map(
                 subject => `
-
                   <div class="subject-row">
 
                     <span>
@@ -1147,16 +1003,11 @@ function renderRecap() {
                     </span>
 
                   </div>
-
                 `
               )
               .join('')
 
-          : `
-            <p>
-              Aucune matière sélectionnée.
-            </p>
-          `
+          : '<p>Aucune matière sélectionnée.</p>'
       }
 
     </div>
@@ -1172,18 +1023,14 @@ function renderRecap() {
 
 function validate() {
 
-  setError(
-    ''
-  );
+  setError('');
 
 
   /* =====================================================
      STEP 1
   ===================================================== */
 
-  if (
-    state.step === 1
-  ) {
+  if (state.step === 1) {
 
     const requiredFields =
       [
@@ -1192,6 +1039,10 @@ function validate() {
         )
       ];
 
+
+    /*
+      Champs obligatoires
+    */
 
     for (
       const field
@@ -1211,13 +1062,16 @@ function validate() {
 
         field.focus();
 
-
         return false;
 
       }
 
     }
 
+
+    /*
+      Téléphone élève
+    */
 
     if (
       !isValidPhone(
@@ -1232,11 +1086,14 @@ function validate() {
 
       studentPhone?.focus();
 
-
       return false;
 
     }
 
+
+    /*
+      Téléphone parent
+    */
 
     if (
       !isValidPhone(
@@ -1251,15 +1108,17 @@ function validate() {
 
       parentPhone?.focus();
 
-
       return false;
 
     }
 
 
+    /*
+      Adresse = Autre
+    */
+
     if (
-      addressSelect?.value ===
-      'Autre'
+      addressSelect?.value === 'Autre'
     ) {
 
       if (
@@ -1274,7 +1133,6 @@ function validate() {
 
         addressOther?.focus();
 
-
         return false;
 
       }
@@ -1282,9 +1140,12 @@ function validate() {
     }
 
 
+    /*
+      Établissement = Autre
+    */
+
     if (
-      schoolSelect?.value ===
-      'Autre'
+      schoolSelect?.value === 'Autre'
     ) {
 
       if (
@@ -1298,7 +1159,6 @@ function validate() {
 
 
         schoolOther?.focus();
-
 
         return false;
 
@@ -1349,14 +1209,9 @@ function validate() {
 
   /* =====================================================
      STEP 4
-     
-     IMPORTANT:
-     Confirmation laissée comme avant.
   ===================================================== */
 
-  if (
-    state.step === 4
-  ) {
+  if (state.step === 4) {
 
     const confirmation =
       form.querySelector(
@@ -1413,7 +1268,7 @@ document.addEventListener(
 
 
     /* -------------------------
-       NIVEAU
+       Niveau
     ------------------------- */
 
     if (level) {
@@ -1426,22 +1281,7 @@ document.addEventListener(
         [];
 
 
-      state.group =
-        '';
-
-
-      state.groupPosition =
-        null;
-
-
-      state.groupCapacity =
-        groupCapacities[
-          state.level
-        ] || 50;
-
-
       renderLevels();
-
 
       return;
 
@@ -1449,7 +1289,7 @@ document.addEventListener(
 
 
     /* -------------------------
-       CONTINUER
+       Continuer
     ------------------------- */
 
     if (next) {
@@ -1464,14 +1304,13 @@ document.addEventListener(
 
       }
 
-
       return;
 
     }
 
 
     /* -------------------------
-       RETOUR
+       Retour
     ------------------------- */
 
     if (back) {
@@ -1479,7 +1318,6 @@ document.addEventListener(
       showStep(
         state.step - 1
       );
-
 
       return;
 
@@ -1498,7 +1336,7 @@ document.addEventListener(
   event => {
 
     /* -------------------------
-       MATIÈRES
+       Matières
     ------------------------- */
 
     if (
@@ -1527,9 +1365,7 @@ document.addEventListener(
 
         }
 
-      }
-
-      else {
+      } else {
 
         state.subjects =
           state.subjects.filter(
@@ -1542,14 +1378,13 @@ document.addEventListener(
 
       renderSubjects();
 
-
       return;
 
     }
 
 
     /* -------------------------
-       ADRESSE
+       Adresse
     ------------------------- */
 
     if (
@@ -1559,14 +1394,13 @@ document.addEventListener(
 
       toggleOtherFields();
 
-
       return;
 
     }
 
 
     /* -------------------------
-       ÉTABLISSEMENT
+       Établissement
     ------------------------- */
 
     if (
@@ -1575,7 +1409,6 @@ document.addEventListener(
     ) {
 
       toggleOtherFields();
-
 
       return;
 
@@ -1636,42 +1469,29 @@ if (submitButton) {
 
 
       const d =
-        new FormData(
-          form
-        );
+        new FormData(form);
 
 
       const code =
         `NOK-26-${String(
           Math.floor(
-            Math.random() *
-              90000
+            Math.random() * 90000
           ) + 10000
         )}`;
 
-
-      /* ===================================================
-         RECORD
-      =================================================== */
 
       const record = {
 
         code,
 
         firstName:
-          d.get(
-            'firstName'
-          ),
+          d.get('firstName'),
 
         lastName:
-          d.get(
-            'lastName'
-          ),
+          d.get('lastName'),
 
         birthDate:
-          d.get(
-            'birthDate'
-          ),
+          d.get('birthDate'),
 
         phone:
           getRawPhone(
@@ -1708,30 +1528,19 @@ if (submitButton) {
       };
 
 
-      /* ===================================================
-         ENREGISTREMENT SUPABASE
-      =================================================== */
-
       try {
-
-        let registrationResult =
-          null;
-
 
         if (
           window.NOKHBA_REMOTE &&
           window.NOKHBA_REMOTE.enabled
         ) {
 
-          registrationResult =
-            await window.NOKHBA_REMOTE
-              .createRegistration(
-                record
-              );
+          await window.NOKHBA_REMOTE
+            .createRegistration(
+              record
+            );
 
-        }
-
-        else if (
+        } else if (
           window.NOKHBA_STORE
         ) {
 
@@ -1740,9 +1549,7 @@ if (submitButton) {
               record
             );
 
-        }
-
-        else {
+        } else {
 
           throw new Error(
             'Aucun système de stockage disponible'
@@ -1750,49 +1557,7 @@ if (submitButton) {
 
         }
 
-
-        /* =================================================
-           RÉSULTAT DU GROUPE
-        ================================================= */
-
-        if (
-          registrationResult
-        ) {
-
-          const allocation =
-            Array.isArray(
-              registrationResult
-            )
-              ? registrationResult[0]
-              : registrationResult;
-
-
-          if (allocation) {
-
-            state.group =
-              allocation.group_name ||
-              '';
-
-
-            state.groupPosition =
-              allocation.group_order ??
-              null;
-
-
-            state.groupCapacity =
-              allocation.group_capacity ??
-              groupCapacities[
-                state.level
-              ] ||
-              50;
-
-          }
-
-        }
-
-      }
-
-      catch (err) {
+      } catch (err) {
 
         console.error(
           'Erreur inscription:',
@@ -1810,10 +1575,6 @@ if (submitButton) {
       }
 
 
-      /* ===================================================
-         SUCCÈS
-      =================================================== */
-
       const studentName =
         document.querySelector(
           '#student-name'
@@ -1829,9 +1590,7 @@ if (submitButton) {
       if (studentName) {
 
         studentName.textContent =
-          d.get(
-            'firstName'
-          ) || '';
+          d.get('firstName') || '';
 
       }
 
@@ -1842,13 +1601,6 @@ if (submitButton) {
           code;
 
       }
-
-
-      /*
-        IMPORTANT:
-        On ne modifie pas encore
-        la confirmation finale.
-      */
 
 
       form.hidden =
@@ -1884,11 +1636,8 @@ if (submitButton) {
 
 
       window.scrollTo({
-
         top: 0,
-
         behavior: 'smooth'
-
       });
 
     }
@@ -1916,24 +1665,19 @@ if (copyButton) {
       const code =
         document.querySelector(
           '#registration-code'
-        )?.textContent ||
-        '';
+        )?.textContent || '';
 
 
       try {
 
         await navigator.clipboard
-          .writeText(
-            code
-          );
+          .writeText(code);
 
 
         copyButton.textContent =
           'Code copié ✓';
 
-      }
-
-      catch {
+      } catch {
 
         copyButton.textContent =
           code;
@@ -1979,25 +1723,11 @@ if (newRegistration) {
       state.step =
         1;
 
-
       state.level =
         '';
 
-
       state.subjects =
         [];
-
-
-      state.group =
-        '';
-
-
-      state.groupPosition =
-        null;
-
-
-      state.groupCapacity =
-        null;
 
 
       form.hidden =
@@ -2034,13 +1764,9 @@ if (newRegistration) {
 
       toggleOtherFields();
 
-
       renderLevels();
 
-
-      showStep(
-        1
-      );
+      showStep(1);
 
     }
   );
@@ -2056,6 +1782,4 @@ initOtherFields();
 
 renderLevels();
 
-showStep(
-  1
-);
+showStep(1);
