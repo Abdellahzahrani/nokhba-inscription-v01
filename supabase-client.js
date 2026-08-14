@@ -3,7 +3,7 @@
    SUPABASE CLIENT
 ========================================================= */
 
-(function(){
+(function () {
 
   const c =
     window.NOKHBA_SUPABASE || {};
@@ -25,6 +25,7 @@
 
   let session = null;
 
+
   try {
 
     session =
@@ -41,16 +42,12 @@
 
 
   /* =======================================================
-     PUBLIC HEADERS
-     
-     IMPORTANT:
-     Les inscriptions publiques ne doivent PAS
-     envoyer un ancien JWT.
+     AUTH HEADERS
   ======================================================= */
 
-  function publicHeaders(){
+  function authHeaders() {
 
-    return {
+    const headers = {
 
       apikey:
         c.anonKey,
@@ -60,25 +57,10 @@
 
     };
 
-  }
-
-
-  /* =======================================================
-     AUTH HEADERS
-     
-     Utilisés uniquement pour les opérations
-     nécessitant une session utilisateur.
-  ======================================================= */
-
-  function authHeaders(){
-
-    const headers =
-      publicHeaders();
-
 
     if (
       session?.access_token
-    ){
+    ) {
 
       headers.Authorization =
         `Bearer ${session.access_token}`;
@@ -93,28 +75,16 @@
 
   /* =======================================================
      REQUEST
-     
-     options.auth = true
-     => utilise le JWT de session
-     
-     sinon
-     => requête publique avec apikey uniquement
   ======================================================= */
 
   async function request(
     path,
     options = {}
-  ){
+  ) {
 
-    const headers =
-      options.auth
-        ? authHeaders()
-        : publicHeaders();
+    const headers = {
 
-
-    const finalHeaders = {
-
-      ...headers,
+      ...authHeaders(),
 
       Prefer:
         options.prefer ||
@@ -125,54 +95,26 @@
     };
 
 
-    /*
-      Ne pas envoyer "auth" vers fetch.
-    */
-
-    const fetchOptions = {
-
-      ...options,
-
-      headers:
-        finalHeaders
-
-    };
-
-
-    delete fetchOptions.auth;
-    delete fetchOptions.prefer;
-
-
     const r =
       await fetch(
 
         `${c.url}/rest/v1/${path}`,
 
-        fetchOptions
+        {
+
+          ...options,
+
+          headers
+
+        }
 
       );
 
 
-    if (!r.ok){
+    if (!r.ok) {
 
       const text =
         await r.text();
-
-
-      /*
-        Si le JWT admin est expiré,
-        on supprime uniquement la session locale.
-      */
-
-      if (
-        r.status === 401 &&
-        options.auth
-      ){
-
-        clearSession();
-
-      }
-
 
       throw new Error(
         text ||
@@ -200,7 +142,7 @@
   async function auth(
     path,
     body
-  ){
+  ) {
 
     const r =
       await fetch(
@@ -212,8 +154,15 @@
           method:
             'POST',
 
-          headers:
-            publicHeaders(),
+          headers: {
+
+            apikey:
+              c.anonKey,
+
+            'Content-Type':
+              'application/json'
+
+          },
 
           body:
             JSON.stringify(body)
@@ -227,7 +176,7 @@
       await r.json();
 
 
-    if (!r.ok){
+    if (!r.ok) {
 
       throw new Error(
 
@@ -255,7 +204,7 @@
 
   function setSession(
     data
-  ){
+  ) {
 
     session =
       data;
@@ -269,7 +218,7 @@
   }
 
 
-  function clearSession(){
+  function clearSession() {
 
     session =
       null;
@@ -304,7 +253,7 @@
     async signIn(
       email,
       password
-    ){
+    ) {
 
       const data =
         await auth(
@@ -329,7 +278,7 @@
     },
 
 
-    signOut(){
+    signOut() {
 
       clearSession();
 
@@ -338,21 +287,12 @@
 
     /* =====================================================
        CREATE REGISTRATION
-       
-       IMPORTANT:
-       PUBLIC REQUEST
-       
-       Aucun JWT de session n'est envoyé ici.
-       
-       Supabase calcule directement :
-       - groupe
-       - position
-       - capacité
-       ===================================================== */
+       GROUPES PAR MATIÈRE
+    ===================================================== */
 
     async createRegistration(
       record
-    ){
+    ) {
 
       const result =
         await request(
@@ -363,14 +303,6 @@
 
             method:
               'POST',
-
-            /*
-              IMPORTANT:
-              Pas de JWT admin.
-              Seulement apikey.
-            */
-            auth:
-              false,
 
             prefer:
               'return=representation',
@@ -416,28 +348,62 @@
 
 
       /*
-        Le résultat peut contenir :
+        Le RPC retourne maintenant :
+
+        registration_id
 
         group_name
         group_position
         group_capacity
-        group_order
-        total_in_group
+
+        subjects : [
+          {
+            subject,
+            group_name,
+            group_position,
+            group_capacity,
+            group_number
+          }
+        ]
       */
 
-      return result;
+
+      /*
+        Selon la façon dont Supabase
+        retourne le JSON, on normalise
+        la réponse pour app.js.
+      */
+
+      if (
+        result &&
+        !Array.isArray(result)
+      ) {
+
+        return result;
+
+      }
+
+
+      if (
+        Array.isArray(result) &&
+        result.length > 0
+      ) {
+
+        return result[0];
+
+      }
+
+
+      return result || null;
 
     },
 
 
     /* =====================================================
        GET REGISTRATIONS
-       
-       ADMIN
-       => JWT de session
     ===================================================== */
 
-    async getRegistrations(){
+    async getRegistrations() {
 
       const rows =
         await request(
@@ -445,9 +411,6 @@
           'registrations?select=*&order=created_at.desc',
 
           {
-
-            auth:
-              true,
 
             prefer:
               'return=representation'
@@ -520,16 +483,50 @@
 
 
     /* =====================================================
+       GET GROUPES PAR MATIÈRE
+    ===================================================== */
+
+    async getRegistrationSubjectGroups(
+      registrationId
+    ) {
+
+      if (!registrationId) {
+
+        return [];
+
+      }
+
+
+      const rows =
+        await request(
+
+          `registration_subject_groups?registration_id=eq.${encodeURIComponent(
+            registrationId
+          )}&select=*&order=id.asc`,
+
+          {
+
+            prefer:
+              'return=representation'
+
+          }
+
+        );
+
+
+      return rows || [];
+
+    },
+
+
+    /* =====================================================
        UPDATE STATUS
-       
-       ADMIN
-       => JWT de session
     ===================================================== */
 
     async updateStatus(
       code,
       status
-    ){
+    ) {
 
       return request(
 
@@ -539,9 +536,6 @@
 
           method:
             'PATCH',
-
-          auth:
-            true,
 
           prefer:
             'return=representation',
@@ -562,12 +556,9 @@
 
     /* =====================================================
        CATALOGUE
-       
-       PUBLIC
-       => Pas besoin de JWT
     ===================================================== */
 
-    async getCatalogue(){
+    async getCatalogue() {
 
       try {
 
@@ -577,9 +568,6 @@
             'catalogue?select=*',
 
             {
-
-              auth:
-                false,
 
               prefer:
                 'return=representation'
@@ -593,7 +581,7 @@
 
       }
 
-      catch (error){
+      catch (error) {
 
         console.warn(
           'Catalogue Supabase indisponible:',
