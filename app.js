@@ -11,8 +11,23 @@ const levels = [
 
 const subjectsByLevel = {
   Primaire: ['Français', 'Mathématiques', 'Arabe'],
-  '1AC': ['Mathématiques', 'Français', 'Anglais', 'Physique-Chimie', 'SVT'],
-  '2AC': ['Mathématiques', 'Français', 'Anglais', 'Physique-Chimie', 'SVT'],
+
+  '1AC': [
+    'Mathématiques',
+    'Français',
+    'Anglais',
+    'Physique-Chimie',
+    'SVT'
+  ],
+
+  '2AC': [
+    'Mathématiques',
+    'Français',
+    'Anglais',
+    'Physique-Chimie',
+    'SVT'
+  ],
+
   '3AC': [
     'Mathématiques',
     'Français',
@@ -22,6 +37,7 @@ const subjectsByLevel = {
     'Histoire-GEO',
     'ARAB'
   ],
+
   'Tronc Commun': [
     'Mathématiques',
     'Français',
@@ -29,6 +45,7 @@ const subjectsByLevel = {
     'Physique-Chimie',
     'SVT'
   ],
+
   '1BAC scientifique': [
     'Mathématiques',
     'Physique-Chimie',
@@ -38,10 +55,12 @@ const subjectsByLevel = {
     'Histoire-GEO',
     'Education islamique'
   ],
+
   '1BAC lettres': [
     'Français',
     'Mathématiques'
   ],
+
   '2BAC': [
     'Physique-Chimie',
     'Mathématiques',
@@ -51,12 +70,24 @@ const subjectsByLevel = {
   ]
 };
 
+
+/* =========================================================
+   CATALOGUE
+========================================================= */
+
 Object.assign(
   subjectsByLevel,
-  JSON.parse(localStorage.getItem('nokhba-catalogue') || 'null') ||
-    window.NOKHBA_CATALOG ||
-    {}
+  JSON.parse(
+    localStorage.getItem('nokhba-catalogue') || 'null'
+  ) ||
+  window.NOKHBA_CATALOG ||
+  {}
 );
+
+
+/* =========================================================
+   STATE
+========================================================= */
 
 const state = {
   step: 1,
@@ -64,16 +95,60 @@ const state = {
   subjects: []
 };
 
-const form = document.querySelector('#registration-form');
-const screens = [...document.querySelectorAll('.screen')];
+
+/* =========================================================
+   DOM
+========================================================= */
+
+const form =
+  document.querySelector('#registration-form');
+
+const screens =
+  [...document.querySelectorAll('.screen')];
+
+const addressSelect =
+  document.querySelector('#address');
+
+const addressOtherWrapper =
+  document.querySelector('#address-other-wrapper');
+
+const addressOther =
+  document.querySelector('#address-other');
+
+const schoolSelect =
+  document.querySelector('#school');
+
+const schoolOtherWrapper =
+  document.querySelector('#school-other-wrapper');
+
+const schoolOther =
+  document.querySelector('#school-other');
+
+const studentPhone =
+  document.querySelector('#student-phone');
+
+const parentPhone =
+  document.querySelector('#parent-phone');
+
+
+/* =========================================================
+   ERROR
+========================================================= */
 
 const error = () =>
   document.querySelector(
     `.screen[data-step="${state.step}"] .form-error`
   );
 
+
 const setError = message => {
-  error().textContent = message;
+
+  const el = error();
+
+  if (el) {
+    el.textContent = message;
+  }
+
 };
 
 
@@ -81,100 +156,162 @@ const setError = message => {
    AUTRE — ADRESSE / ÉTABLISSEMENT
 ========================================================= */
 
-const addressSelect = document.querySelector('#address');
-const addressOtherWrapper = document.querySelector('#address-other-wrapper');
-const addressOther = document.querySelector('#address-other');
-
-const schoolSelect = document.querySelector('#school');
-const schoolOtherWrapper = document.querySelector('#school-other-wrapper');
-const schoolOther = document.querySelector('#school-other');
-
 function toggleOtherFields() {
 
-  if (addressSelect) {
-    const isOther = addressSelect.value === 'Autre';
+  /* -------------------------
+     Adresse
+  ------------------------- */
 
-    addressOtherWrapper.hidden = !isOther;
-    addressOther.required = isOther;
+  if (
+    addressSelect &&
+    addressOtherWrapper &&
+    addressOther
+  ) {
+
+    const isOther =
+      addressSelect.value === 'Autre';
+
+    addressOtherWrapper.style.display =
+      isOther ? '' : 'none';
+
+    addressOther.required =
+      isOther;
 
     if (!isOther) {
       addressOther.value = '';
     }
   }
 
-  if (schoolSelect) {
-    const isOther = schoolSelect.value === 'Autre';
 
-    schoolOtherWrapper.hidden = !isOther;
-    schoolOther.required = isOther;
+  /* -------------------------
+     Établissement
+  ------------------------- */
+
+  if (
+    schoolSelect &&
+    schoolOtherWrapper &&
+    schoolOther
+  ) {
+
+    const isOther =
+      schoolSelect.value === 'Autre';
+
+    schoolOtherWrapper.style.display =
+      isOther ? '' : 'none';
+
+    schoolOther.required =
+      isOther;
 
     if (!isOther) {
       schoolOther.value = '';
     }
   }
+
 }
 
 
 /* =========================================================
-   TÉLÉPHONE
-   Format : 06 12 34 56 78
+   PHONE
+   Format :
+   06 12 34 56 78
 ========================================================= */
 
 function formatPhone(input) {
 
   if (!input) return;
 
-  let value = input.value.replace(/\D/g, '');
+  /*
+    On enlève tout sauf les chiffres.
+  */
 
-  // Maximum 10 chiffres
-  value = value.substring(0, 10);
+  let value =
+    input.value.replace(/\D/g, '');
+
+
+  /*
+    Maximum 10 chiffres.
+  */
+
+  value =
+    value.substring(0, 10);
+
+
+  /*
+    Construction du format :
+    0X XX XX XX XX
+  */
 
   const parts = [];
 
+
   if (value.length > 0) {
-    parts.push(value.substring(0, 2));
+    parts.push(
+      value.substring(0, 2)
+    );
   }
+
 
   if (value.length > 2) {
-    parts.push(value.substring(2, 4));
+    parts.push(
+      value.substring(2, 4)
+    );
   }
+
 
   if (value.length > 4) {
-    parts.push(value.substring(4, 6));
+    parts.push(
+      value.substring(4, 6)
+    );
   }
+
 
   if (value.length > 6) {
-    parts.push(value.substring(6, 8));
+    parts.push(
+      value.substring(6, 8)
+    );
   }
+
 
   if (value.length > 8) {
-    parts.push(value.substring(8, 10));
+    parts.push(
+      value.substring(8, 10)
+    );
   }
 
-  input.value = parts.join(' ');
+
+  input.value =
+    parts.join(' ');
 }
 
+
+/* =========================================================
+   RAW PHONE
+========================================================= */
 
 function getRawPhone(value) {
-  return String(value || '').replace(/\D/g, '');
+
+  return String(value || '')
+    .replace(/\D/g, '');
+
 }
 
+
+/* =========================================================
+   VALIDATION PHONE
+========================================================= */
 
 function isValidMoroccanPhone(value) {
 
-  const phone = getRawPhone(value);
+  const phone =
+    getRawPhone(value);
 
   /*
-    Format marocain :
-    0X XX XX XX XX
-
-    On accepte :
-    05...
-    06...
-    07...
+    10 chiffres exactement
+    commence par 05, 06 ou 07
   */
 
   return /^0[5-7]\d{8}$/.test(phone);
+
 }
 
 
@@ -186,35 +323,56 @@ function showStep(step) {
 
   state.step = step;
 
+
   screens.forEach(screen => {
+
     screen.classList.toggle(
       'active',
-      +screen.dataset.step === step
+      Number(screen.dataset.step) === step
     );
+
   });
 
-  document.querySelectorAll('#steps li').forEach((li, i) => {
-    li.classList.toggle(
-      'active',
-      i < step
-    );
-  });
 
-  document.querySelector('#progress-bar').style.width =
-    `${((step - 1) / 3) * 100}%`;
+  document
+    .querySelectorAll('#steps li')
+    .forEach((li, index) => {
+
+      li.classList.toggle(
+        'active',
+        index < step
+      );
+
+    });
+
+
+  const progressBar =
+    document.querySelector('#progress-bar');
+
+
+  if (progressBar) {
+
+    progressBar.style.width =
+      `${((step - 1) / 3) * 100}%`;
+
+  }
+
 
   if (step === 3) {
     renderSubjects();
   }
 
+
   if (step === 4) {
     renderRecap();
   }
+
 
   window.scrollTo({
     top: 0,
     behavior: 'smooth'
   });
+
 }
 
 
@@ -224,14 +382,22 @@ function showStep(step) {
 
 function renderLevels() {
 
-  document.querySelector('#levels').innerHTML =
+  const container =
+    document.querySelector('#levels');
+
+  if (!container) return;
+
+
+  container.innerHTML =
     levels
       .map(
         ([name, sub]) => `
           <button
             type="button"
             class="level-option ${
-              state.level === name ? 'selected' : ''
+              state.level === name
+                ? 'selected'
+                : ''
             }"
             data-level="${name}"
           >
@@ -241,6 +407,7 @@ function renderLevels() {
         `
       )
       .join('');
+
 }
 
 
@@ -250,15 +417,29 @@ function renderLevels() {
 
 function renderSubjects() {
 
+  const container =
+    document.querySelector('#subjects');
+
+  if (!container) return;
+
+
   const subjects =
     subjectsByLevel[state.level] || [];
 
-  document.querySelector(
-    '#subjects-intro'
-  ).textContent =
-    `Niveau sélectionné : ${state.level}. Choisissez une ou plusieurs matières.`;
 
-  document.querySelector('#subjects').innerHTML =
+  const intro =
+    document.querySelector('#subjects-intro');
+
+
+  if (intro) {
+
+    intro.textContent =
+      `Niveau sélectionné : ${state.level}. Choisissez une ou plusieurs matières.`;
+
+  }
+
+
+  container.innerHTML =
     subjects
       .map(
         name => `
@@ -291,30 +472,51 @@ function renderSubjects() {
         `
       )
       .join('');
+
 }
 
 
 /* =========================================================
-   VALEURS RÉELLES ADRESSE / ÉCOLE
+   VALEURS ADRESSE / ÉCOLE
 ========================================================= */
 
 function getAddressValue() {
 
-  if (addressSelect.value === 'Autre') {
-    return addressOther.value.trim();
+  if (
+    addressSelect &&
+    addressSelect.value === 'Autre'
+  ) {
+
+    return addressOther
+      ? addressOther.value.trim()
+      : '';
+
   }
 
-  return addressSelect.value;
+  return addressSelect
+    ? addressSelect.value
+    : '';
+
 }
 
 
 function getSchoolValue() {
 
-  if (schoolSelect.value === 'Autre') {
-    return schoolOther.value.trim();
+  if (
+    schoolSelect &&
+    schoolSelect.value === 'Autre'
+  ) {
+
+    return schoolOther
+      ? schoolOther.value.trim()
+      : '';
+
   }
 
-  return schoolSelect.value;
+  return schoolSelect
+    ? schoolSelect.value
+    : '';
+
 }
 
 
@@ -324,24 +526,49 @@ function getSchoolValue() {
 
 function renderRecap() {
 
-  const d = new FormData(form);
+  const d =
+    new FormData(form);
+
+
+  const firstName =
+    d.get('firstName') || '';
+
+  const lastName =
+    d.get('lastName') || '';
+
 
   const fullName =
-    `${d.get('firstName')} ${d.get('lastName')}`;
+    `${firstName} ${lastName}`.trim();
 
-  const address = getAddressValue();
-  const school = getSchoolValue();
 
-  const studentPhone =
-    d.get('studentPhone');
+  const address =
+    getAddressValue();
 
-  const parentPhone =
-    d.get('parentPhone');
+
+  const school =
+    getSchoolValue();
+
+
+  const studentPhoneValue =
+    d.get('studentPhone') || '';
+
+
+  const parentPhoneValue =
+    d.get('parentPhone') || '';
+
 
   const birthDate =
-    d.get('birthDate');
+    d.get('birthDate') || '';
 
-  document.querySelector('#recap').innerHTML = `
+
+  const recap =
+    document.querySelector('#recap');
+
+
+  if (!recap) return;
+
+
+  recap.innerHTML = `
 
     <div class="recap-section">
 
@@ -357,19 +584,22 @@ function renderRecap() {
       </p>
 
       <p>
-        ${studentPhone || '—'}
+        Téléphone :
+        ${studentPhoneValue || '—'}
       </p>
 
       <p>
         Téléphone parent :
-        ${parentPhone || '—'}
+        ${parentPhoneValue || '—'}
       </p>
 
       <p>
+        Établissement :
         ${school || '—'}
       </p>
 
       <p>
+        Adresse :
         ${address || '—'}
       </p>
 
@@ -392,21 +622,24 @@ function renderRecap() {
       <h3>Matières choisies</h3>
 
       ${
-        state.subjects
-          .map(
-            subject => `
-              <div class="subject-row">
-                <span>${subject}</span>
-                <span>✓</span>
-              </div>
-            `
-          )
-          .join('')
+        state.subjects.length
+          ? state.subjects
+              .map(
+                subject => `
+                  <div class="subject-row">
+                    <span>${subject}</span>
+                    <span>✓</span>
+                  </div>
+                `
+              )
+              .join('')
+          : '<p>Aucune matière sélectionnée.</p>'
       }
 
     </div>
 
   `;
+
 }
 
 
@@ -418,18 +651,31 @@ function validate() {
 
   setError('');
 
-  /* ÉTAPE 1 */
+
+  /* =====================================================
+     ÉTAPE 1
+  ===================================================== */
+
   if (state.step === 1) {
 
-    const required = [
-      ...document.querySelectorAll(
-        '[data-step="1"] [required]'
-      )
-    ];
+    const required =
+      [
+        ...document.querySelectorAll(
+          '[data-step="1"] [required]'
+        )
+      ];
+
+
+    /*
+      Champs obligatoires vides
+    */
 
     if (
       required.some(
-        field => !String(field.value || '').trim()
+        field =>
+          !String(
+            field.value || ''
+          ).trim()
       )
     ) {
 
@@ -441,10 +687,15 @@ function validate() {
     }
 
 
-    /* Téléphone élève */
+    /*
+      Téléphone élève
+    */
+
     if (
       !isValidMoroccanPhone(
-        document.querySelector('#student-phone').value
+        studentPhone
+          ? studentPhone.value
+          : ''
       )
     ) {
 
@@ -452,485 +703,5 @@ function validate() {
         'Le numéro de téléphone de l’élève doit être au format 0X XX XX XX XX.'
       );
 
-      document
-        .querySelector('#student-phone')
-        .focus();
 
-      return false;
-    }
-
-
-    /* Téléphone parent */
-    if (
-      !isValidMoroccanPhone(
-        document.querySelector('#parent-phone').value
-      )
-    ) {
-
-      setError(
-        'Le numéro du parent doit être au format 0X XX XX XX XX.'
-      );
-
-      document
-        .querySelector('#parent-phone')
-        .focus();
-
-      return false;
-    }
-
-
-    /* Adresse Autre */
-    if (
-      addressSelect.value === 'Autre' &&
-      !addressOther.value.trim()
-    ) {
-
-      setError(
-        'Veuillez préciser votre quartier.'
-      );
-
-      addressOther.focus();
-
-      return false;
-    }
-
-
-    /* École Autre */
-    if (
-      schoolSelect.value === 'Autre' &&
-      !schoolOther.value.trim()
-    ) {
-
-      setError(
-        'Veuillez préciser votre établissement.'
-      );
-
-      schoolOther.focus();
-
-      return false;
-    }
-  }
-
-
-  /* ÉTAPE 2 */
-  if (
-    state.step === 2 &&
-    !state.level
-  ) {
-
-    setError(
-      'Veuillez choisir votre niveau.'
-    );
-
-    return false;
-  }
-
-
-  /* ÉTAPE 3 */
-  if (
-    state.step === 3 &&
-    !state.subjects.length
-  ) {
-
-    setError(
-      'Sélectionnez au moins une matière.'
-    );
-
-    return false;
-  }
-
-
-  /* ÉTAPE 4 */
-  if (
-    state.step === 4 &&
-    !form.confirmed.checked
-  ) {
-
-    setError(
-      'Veuillez confirmer que vos informations sont correctes.'
-    );
-
-    return false;
-  }
-
-  return true;
-}
-
-
-/* =========================================================
-   CLICS
-========================================================= */
-
-document.addEventListener(
-  'click',
-  e => {
-
-    const next =
-      e.target.closest('[data-next]');
-
-    const back =
-      e.target.closest('[data-back]');
-
-    const level =
-      e.target.closest('[data-level]');
-
-
-    /* Niveau */
-    if (level) {
-
-      state.level =
-        level.dataset.level;
-
-      state.subjects = [];
-
-      renderLevels();
-
-      return;
-    }
-
-
-    /* Continuer */
-    if (
-      next &&
-      validate()
-    ) {
-
-      showStep(
-        state.step + 1
-      );
-    }
-
-
-    /* Retour */
-    if (back) {
-
-      showStep(
-        state.step - 1
-      );
-    }
-
-  }
-);
-
-
-/* =========================================================
-   CHANGEMENTS
-========================================================= */
-
-document.addEventListener(
-  'change',
-  e => {
-
-    /* Matières */
-    if (
-      e.target.matches(
-        '#subjects input'
-      )
-    ) {
-
-      const n =
-        e.target.value;
-
-      state.subjects =
-        e.target.checked
-          ? [...state.subjects, n]
-          : state.subjects.filter(
-              x => x !== n
-            );
-
-      renderSubjects();
-
-      return;
-    }
-
-
-    /* Adresse */
-    if (
-      e.target.matches('#address')
-    ) {
-
-      toggleOtherFields();
-
-      return;
-    }
-
-
-    /* Établissement */
-    if (
-      e.target.matches('#school')
-    ) {
-
-      toggleOtherFields();
-
-      return;
-    }
-
-  }
-);
-
-
-/* =========================================================
-   FORMATAGE DES TÉLÉPHONES
-========================================================= */
-
-document.addEventListener(
-  'input',
-  e => {
-
-    if (
-      e.target.matches(
-        '#student-phone, #parent-phone'
-      )
-    ) {
-
-      formatPhone(e.target);
-    }
-
-  }
-);
-
-
-/* =========================================================
-   ENVOI INSCRIPTION
-========================================================= */
-
-document
-  .querySelector('#submit-registration')
-  .addEventListener(
-    'click',
-    async () => {
-
-      if (!validate()) {
-        return;
-      }
-
-      const d =
-        new FormData(form);
-
-      const code =
-        `NOK-26-${String(
-          Math.floor(
-            Math.random() * 90000
-          ) + 10000
-        )}`;
-
-
-      const address =
-        getAddressValue();
-
-      const school =
-        getSchoolValue();
-
-
-      const record = {
-
-        code,
-
-        firstName:
-          d.get('firstName'),
-
-        lastName:
-          d.get('lastName'),
-
-        birthDate:
-          d.get('birthDate'),
-
-        phone:
-          getRawPhone(
-            d.get('studentPhone')
-          ),
-
-        parentPhone:
-          getRawPhone(
-            d.get('parentPhone')
-          ),
-
-        school,
-
-        address,
-
-        level:
-          state.level,
-
-        subjects:
-          state.subjects,
-
-        status:
-          'En attente',
-
-        createdAt:
-          new Date().toLocaleString(
-            'fr-FR'
-          )
-
-      };
-
-
-      try {
-
-        if (
-          window.NOKHBA_REMOTE.enabled
-        ) {
-
-          await window.NOKHBA_REMOTE
-            .createRegistration(
-              record
-            );
-
-        } else {
-
-          window.NOKHBA_STORE
-            .saveRegistration(
-              record
-            );
-        }
-
-      } catch (error) {
-
-        console.error(
-          'Erreur inscription:',
-          error
-        );
-
-        setError(
-          'Une erreur est survenue. Veuillez réessayer.'
-        );
-
-        return;
-      }
-
-
-      document.querySelector(
-        '#student-name'
-      ).textContent =
-        d.get('firstName');
-
-
-      document.querySelector(
-        '#registration-code'
-      ).textContent =
-        code;
-
-
-      form.hidden = true;
-
-      document.querySelector(
-        '#success'
-      ).hidden = false;
-
-
-      document.querySelector(
-        '.progress-wrap'
-      ).hidden = true;
-
-
-      window.scrollTo({
-        top: 0,
-        behavior: 'smooth'
-      });
-
-    }
-  );
-
-
-/* =========================================================
-   COPIER CODE
-========================================================= */
-
-document
-  .querySelector('#copy-code')
-  .addEventListener(
-    'click',
-    async e => {
-
-      const code =
-        document.querySelector(
-          '#registration-code'
-        ).textContent;
-
-      try {
-
-        await navigator.clipboard
-          .writeText(code);
-
-        e.target.textContent =
-          'Code copié ✓';
-
-      } catch {
-
-        e.target.textContent =
-          code;
-      }
-
-      setTimeout(
-        () => {
-          e.target.textContent =
-            'Copier le code';
-        },
-        1800
-      );
-
-    }
-  );
-
-
-/* =========================================================
-   NOUVELLE INSCRIPTION
-========================================================= */
-
-document
-  .querySelector('#new-registration')
-  .addEventListener(
-    'click',
-    () => {
-
-      form.reset();
-
-      state.level = '';
-
-      state.subjects = [];
-
-      form.hidden = false;
-
-      document.querySelector(
-        '#success'
-      ).hidden = true;
-
-      document.querySelector(
-        '.progress-wrap'
-      ).hidden = false;
-
-
-      if (addressOtherWrapper) {
-        addressOtherWrapper.hidden = true;
-      }
-
-      if (schoolOtherWrapper) {
-        schoolOtherWrapper.hidden = true;
-      }
-
-
-      if (addressOther) {
-        addressOther.required = false;
-      }
-
-      if (schoolOther) {
-        schoolOther.required = false;
-      }
-
-
-      renderLevels();
-
-      showStep(1);
-
-    }
-  );
-
-
-/* =========================================================
-   INITIALISATION
-========================================================= */
-
-toggleOtherFields();
-
-renderLevels();
+      if (
