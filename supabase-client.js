@@ -25,13 +25,11 @@
 
   let session = null;
 
-
   try {
 
     session =
       JSON.parse(
-        localStorage.getItem(tokenKey) ||
-        'null'
+        localStorage.getItem(tokenKey) || 'null'
       );
 
   } catch {
@@ -58,17 +56,82 @@
     };
 
 
+    /*
+      Session uniquement pour les opérations
+      administratives authentifiées.
+    */
+
     if (
       session?.access_token
     ) {
 
-      headers.Authorization =
-        `Bearer ${session.access_token}`;
+      /*
+        Vérification expiration JWT
+      */
+
+      try {
+
+        const payload =
+          JSON.parse(
+            atob(
+              session.access_token
+                .split('.')[1]
+                .replace(/-/g, '+')
+                .replace(/_/g, '/')
+            )
+          );
+
+
+        const expired =
+          payload.exp &&
+          payload.exp * 1000 < Date.now();
+
+
+        if (!expired) {
+
+          headers.Authorization =
+            `Bearer ${session.access_token}`;
+
+        } else {
+
+          console.warn(
+            'Session Supabase expirée.'
+          );
+
+          clearSession();
+
+        }
+
+      } catch {
+
+        clearSession();
+
+      }
 
     }
 
 
     return headers;
+
+  }
+
+
+  /* =======================================================
+     HEADERS PUBLICS
+     Pour les inscriptions
+  ======================================================= */
+
+  function publicHeaders() {
+
+    return {
+
+      apikey:
+        c.anonKey,
+
+      'Content-Type':
+        'application/json'
+
+    };
 
   }
 
@@ -136,6 +199,63 @@
 
 
   /* =======================================================
+     PUBLIC RPC REQUEST
+  ======================================================= */
+
+  async function publicRpc(
+    functionName,
+    body
+  ) {
+
+    const r =
+      await fetch(
+
+        `${c.url}/rest/v1/rpc/${functionName}`,
+
+        {
+
+          method:
+            'POST',
+
+          headers: {
+
+            ...publicHeaders(),
+
+            Prefer:
+              'return=representation'
+
+          },
+
+          body:
+            JSON.stringify(body)
+
+        }
+
+      );
+
+
+    const text =
+      await r.text();
+
+
+    if (!r.ok) {
+
+      throw new Error(
+        text ||
+        `Supabase error ${r.status}`
+      );
+
+    }
+
+
+    return text
+      ? JSON.parse(text)
+      : null;
+
+  }
+
+
+  /* =======================================================
      AUTH
   ======================================================= */
 
@@ -181,11 +301,8 @@
       throw new Error(
 
         data.error_description ||
-
         data.msg ||
-
         data.message ||
-
         'Échec de connexion.'
 
       );
@@ -202,13 +319,10 @@
      SESSION
   ======================================================= */
 
-  function setSession(
-    data
-  ) {
+  function setSession(data) {
 
     session =
       data;
-
 
     localStorage.setItem(
       tokenKey,
@@ -222,7 +336,6 @@
 
     session =
       null;
-
 
     localStorage.removeItem(
       tokenKey
@@ -287,7 +400,9 @@
 
     /* =====================================================
        CREATE REGISTRATION
-       GROUPES PAR MATIÈRE
+       
+       IMPORTANT :
+       Aucun JWT stocké n'est envoyé ici.
     ===================================================== */
 
     async createRegistration(
@@ -295,106 +410,48 @@
     ) {
 
       const result =
-        await request(
+        await publicRpc(
 
-          'rpc/register_nokhba_student',
+          'register_nokhba_student',
 
           {
 
-            method:
-              'POST',
+            p_code:
+              record.code,
 
-            prefer:
-              'return=representation',
+            p_first_name:
+              record.firstName,
 
-            body:
-              JSON.stringify({
+            p_last_name:
+              record.lastName,
 
-                p_code:
-                  record.code,
+            p_phone:
+              record.phone,
 
-                p_first_name:
-                  record.firstName,
+            p_parent_phone:
+              record.parentPhone,
 
-                p_last_name:
-                  record.lastName,
+            p_school:
+              record.school,
 
-                p_phone:
-                  record.phone,
+            p_address:
+              record.address,
 
-                p_parent_phone:
-                  record.parentPhone,
+            p_level:
+              record.level,
 
-                p_school:
-                  record.school,
+            p_subjects:
+              record.subjects,
 
-                p_address:
-                  record.address,
-
-                p_level:
-                  record.level,
-
-                p_subjects:
-                  record.subjects,
-
-                p_status:
-                  record.status
-
-              })
+            p_status:
+              record.status
 
           }
 
         );
 
 
-      /*
-        Le RPC retourne maintenant :
-
-        registration_id
-
-        group_name
-        group_position
-        group_capacity
-
-        subjects : [
-          {
-            subject,
-            group_name,
-            group_position,
-            group_capacity,
-            group_number
-          }
-        ]
-      */
-
-
-      /*
-        Selon la façon dont Supabase
-        retourne le JSON, on normalise
-        la réponse pour app.js.
-      */
-
-      if (
-        result &&
-        !Array.isArray(result)
-      ) {
-
-        return result;
-
-      }
-
-
-      if (
-        Array.isArray(result) &&
-        result.length > 0
-      ) {
-
-        return result[0];
-
-      }
-
-
-      return result || null;
+      return result;
 
     },
 
@@ -483,43 +540,6 @@
 
 
     /* =====================================================
-       GET GROUPES PAR MATIÈRE
-    ===================================================== */
-
-    async getRegistrationSubjectGroups(
-      registrationId
-    ) {
-
-      if (!registrationId) {
-
-        return [];
-
-      }
-
-
-      const rows =
-        await request(
-
-          `registration_subject_groups?registration_id=eq.${encodeURIComponent(
-            registrationId
-          )}&select=*&order=id.asc`,
-
-          {
-
-            prefer:
-              'return=representation'
-
-          }
-
-        );
-
-
-      return rows || [];
-
-    },
-
-
-    /* =====================================================
        UPDATE STATUS
     ===================================================== */
 
@@ -579,15 +599,12 @@
 
         return rows || [];
 
-      }
-
-      catch (error) {
+      } catch (error) {
 
         console.warn(
           'Catalogue Supabase indisponible:',
           error
         );
-
 
         return null;
 
@@ -596,6 +613,5 @@
     }
 
   };
-
 
 })();
