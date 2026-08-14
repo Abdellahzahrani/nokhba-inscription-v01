@@ -5,72 +5,538 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#0b2942" />
     <title>Inscription en ligne | Institut NOKHBA</title>
+
     <link rel="stylesheet" href="style.css" />
     <link rel="stylesheet" href="logo.css" />
     <link rel="stylesheet" href="theme.css" />
   </head>
+
   <body>
     <main class="shell">
+
       <header class="site-header">
-        <a class="brand" href="#" aria-label="Institut NOKHBA"><span class="brand-logo"><img src="assets/nokhba-logo.png" alt="Institut NOKHBA" /></span></a>
-        <span class="school-year">Pré-inscription · 2026–2027</span>
+        <a class="brand" href="#" aria-label="Institut NOKHBA">
+          <span class="brand-logo">
+            <img src="assets/nokhba-logo.png" alt="Institut NOKHBA" />
+          </span>
+        </a>
+
+        <span class="school-year">
+          Pré-inscription · 2026–2027
+        </span>
       </header>
 
       <section class="progress-wrap" aria-label="Progression de l'inscription">
-        <div class="progress-line"><span id="progress-bar"></span></div>
+        <div class="progress-line">
+          <span id="progress-bar"></span>
+        </div>
+
         <ol class="steps" id="steps">
-          <li class="active"><span>1</span><b>Informations</b></li><li><span>2</span><b>Niveau</b></li><li><span>3</span><b>Matières</b></li><li><span>4</span><b>Récapitulatif</b></li>
+          <li class="active">
+            <span>1</span>
+            <b>Informations</b>
+          </li>
+
+          <li>
+            <span>2</span>
+            <b>Niveau</b>
+          </li>
+
+          <li>
+            <span>3</span>
+            <b>Matières</b>
+          </li>
+
+          <li>
+            <span>4</span>
+            <b>Récapitulatif</b>
+          </li>
         </ol>
       </section>
 
       <section class="card" id="form-card">
+
         <form id="registration-form" novalidate>
+
+          <!-- ÉTAPE 1 -->
           <section class="screen active" data-step="1">
-            <p class="eyebrow">Bienvenue</p><h1>Inscription en ligne</h1>
-            <p class="lead">Commencez votre pré-inscription à l’Institut NOKHBA. Cela ne vous prendra que quelques minutes.</p>
-            <div class="notice"><span>✦</span><p>Vos informations restent confidentielles et seront utilisées uniquement pour votre inscription.</p></div>
+
+            <p class="eyebrow">Bienvenue</p>
+
+            <h1>Inscription en ligne</h1>
+
+            <p class="lead">
+              Commencez votre pré-inscription à l’Institut NOKHBA.
+              Cela ne vous prendra que quelques minutes.
+            </p>
+
+            <div class="notice">
+              <span>✦</span>
+              <p>
+                Vos informations restent confidentielles et seront utilisées
+                uniquement pour votre inscription.
+              </p>
+            </div>
+
             <h2>Informations de l’élève</h2>
-            <div class="grid two"><label>Nom <input name="lastName" autocomplete="family-name" placeholder="Ex. El Amrani" required /></label><label>Prénom <input name="firstName" autocomplete="given-name" placeholder="Ex. Sara" required /></label></div>
-            <div class="grid two"><label>Date de naissance <input type="date" name="birthDate" required /></label><label>Sexe <select name="gender" required><option value="">Sélectionnez</option><option>Féminin</option><option>Masculin</option></select></label></div>
-            <label>Adresse <span lang="ar" dir="rtl">العنوان</span><select name="address" required><option value="">Sélectionnez votre quartier</option><option>Salam 2</option><option>Anassi</option><option>BADR / AL ALIA</option><option>Azhar</option><option>Sidi Moumen</option><option>Autre</option></select></label>
-            <div class="grid two"><label>Téléphone de l’élève <span lang="ar" dir="rtl">رقم الهاتف</span><input type="tel" name="studentPhone" inputmode="tel" placeholder="06 00 00 00 00" required /></label><label>Téléphone du parent / tuteur <span lang="ar" dir="rtl">رقم هاتف ولي الأمر</span><input type="tel" name="parentPhone" inputmode="tel" placeholder="06 00 00 00 00" required /></label></div>
-            <label>Établissement <span lang="ar" dir="rtl">المؤسسة</span><select name="school" required><option value="">Sélectionnez votre établissement</option><option>الثانوية التأهيلية زينب النفزاوية</option><option>الثانوية التأهيلية محمد السادس</option><option>الثانوية التأهيلية محمد الزفزاف / العالية</option><option>الثانوية الإعدادية عبدالله العياشي</option><option>الثانوية الإعدادية ثريا السقاط</option><option>الثانوية الإعدادية الحنصالي</option><option>Autre</option></select></label>
-            <div class="form-error" role="alert"></div><div class="actions end"><button type="button" class="button primary" data-next>Continuer <span>→</span></button></div>
+
+            <!-- Nom / Prénom -->
+            <div class="grid two">
+
+              <label>
+                Nom
+
+                <input
+                  name="lastName"
+                  autocomplete="family-name"
+                  placeholder="Ex. El Amrani"
+                  required
+                />
+              </label>
+
+              <label>
+                Prénom
+
+                <input
+                  name="firstName"
+                  autocomplete="given-name"
+                  placeholder="Ex. Sara"
+                  required
+                />
+              </label>
+
+            </div>
+
+            <!-- Date de naissance uniquement -->
+            <label>
+              Date de naissance
+
+              <input
+                type="date"
+                name="birthDate"
+                required
+              />
+            </label>
+
+            <!-- Adresse -->
+            <label>
+              Adresse
+              <span lang="ar" dir="rtl">العنوان</span>
+
+              <select
+                name="address"
+                id="address"
+                required
+              >
+                <option value="">
+                  Sélectionnez votre quartier
+                </option>
+
+                <option>Salam 2</option>
+                <option>Anassi</option>
+                <option>BADR / AL ALIA</option>
+                <option>Azhar</option>
+                <option>Sidi Moumen</option>
+                <option value="Autre">Autre</option>
+              </select>
+            </label>
+
+            <!-- Adresse personnalisée -->
+            <label
+              id="address-other-wrapper"
+              hidden
+            >
+              Précisez votre quartier
+
+              <input
+                type="text"
+                name="addressOther"
+                id="address-other"
+                placeholder="Écrivez votre quartier"
+              />
+            </label>
+
+            <!-- Téléphones -->
+            <div class="grid two">
+
+              <label>
+                Téléphone de l’élève
+                <span lang="ar" dir="rtl">
+                  رقم الهاتف
+                </span>
+
+                <input
+                  type="tel"
+                  name="studentPhone"
+                  id="student-phone"
+                  inputmode="numeric"
+                  autocomplete="tel"
+                  maxlength="10"
+                  pattern="0[5-7][0-9]{8}"
+                  placeholder="06 00 00 00 00"
+                  required
+                />
+              </label>
+
+              <label>
+                Téléphone du parent / tuteur
+                <span lang="ar" dir="rtl">
+                  رقم هاتف ولي الأمر
+                </span>
+
+                <input
+                  type="tel"
+                  name="parentPhone"
+                  id="parent-phone"
+                  inputmode="numeric"
+                  autocomplete="tel"
+                  maxlength="10"
+                  pattern="0[5-7][0-9]{8}"
+                  placeholder="06 00 00 00 00"
+                  required
+                />
+              </label>
+
+            </div>
+
+            <!-- Établissement -->
+            <label>
+              Établissement
+              <span lang="ar" dir="rtl">المؤسسة</span>
+
+              <select
+                name="school"
+                id="school"
+                required
+              >
+                <option value="">
+                  Sélectionnez votre établissement
+                </option>
+
+                <option>
+                  الثانوية التأهيلية زينب النفزاوية
+                </option>
+
+                <option>
+                  الثانوية التأهيلية محمد السادس
+                </option>
+
+                <option>
+                  الثانوية التأهيلية محمد الزفزاف / العالية
+                </option>
+
+                <option>
+                  الثانوية الإعدادية عبدالله العياشي
+                </option>
+
+                <option>
+                  الثانوية الإعدادية ثريا السقاط
+                </option>
+
+                <option>
+                  الثانوية الإعدادية الحنصالي
+                </option>
+
+                <option value="Autre">Autre</option>
+              </select>
+            </label>
+
+            <!-- Établissement personnalisé -->
+            <label
+              id="school-other-wrapper"
+              hidden
+            >
+              Précisez votre établissement
+
+              <input
+                type="text"
+                name="schoolOther"
+                id="school-other"
+                placeholder="Écrivez le nom de votre établissement"
+              />
+            </label>
+
+            <div
+              class="form-error"
+              role="alert"
+            ></div>
+
+            <div class="actions end">
+
+              <button
+                type="button"
+                class="button primary"
+                data-next
+              >
+                Continuer
+                <span>→</span>
+              </button>
+
+            </div>
+
           </section>
 
-          <section class="screen" data-step="2">
-            <p class="eyebrow">Étape 2 sur 4</p><h1>Choisissez votre niveau</h1><p class="lead">Nous vous proposerons les matières adaptées à votre parcours.</p>
-            <div class="levels" id="levels"></div><div class="form-error" role="alert"></div>
-            <div class="actions"><button type="button" class="button ghost" data-back>← Retour</button><button type="button" class="button primary" data-next>Continuer <span>→</span></button></div>
+
+          <!-- ÉTAPE 2 -->
+          <section
+            class="screen"
+            data-step="2"
+          >
+
+            <p class="eyebrow">
+              Étape 2 sur 4
+            </p>
+
+            <h1>
+              Choisissez votre niveau
+            </h1>
+
+            <p class="lead">
+              Nous vous proposerons les matières adaptées à votre parcours.
+            </p>
+
+            <div
+              class="levels"
+              id="levels"
+            ></div>
+
+            <div
+              class="form-error"
+              role="alert"
+            ></div>
+
+            <div class="actions">
+
+              <button
+                type="button"
+                class="button ghost"
+                data-back
+              >
+                ← Retour
+              </button>
+
+              <button
+                type="button"
+                class="button primary"
+                data-next
+              >
+                Continuer
+                <span>→</span>
+              </button>
+
+            </div>
+
           </section>
 
-          <section class="screen" data-step="3">
-            <p class="eyebrow">Étape 3 sur 4</p><h1>Choisissez vos matières</h1><p class="lead" id="subjects-intro">Sélectionnez une ou plusieurs matières.</p>
-            <div class="subject-list" id="subjects"></div><p class="selection-note"><span>✓</span> Vous pourrez modifier votre choix avant de confirmer.</p><div class="form-error" role="alert"></div>
-            <div class="actions"><button type="button" class="button ghost" data-back>← Retour</button><button type="button" class="button primary" data-next>Voir le récapitulatif <span>→</span></button></div>
+
+          <!-- ÉTAPE 3 -->
+          <section
+            class="screen"
+            data-step="3"
+          >
+
+            <p class="eyebrow">
+              Étape 3 sur 4
+            </p>
+
+            <h1>
+              Choisissez vos matières
+            </h1>
+
+            <p
+              class="lead"
+              id="subjects-intro"
+            >
+              Sélectionnez une ou plusieurs matières.
+            </p>
+
+            <div
+              class="subject-list"
+              id="subjects"
+            ></div>
+
+            <p class="selection-note">
+              <span>✓</span>
+              Vous pourrez modifier votre choix avant de confirmer.
+            </p>
+
+            <div
+              class="form-error"
+              role="alert"
+            ></div>
+
+            <div class="actions">
+
+              <button
+                type="button"
+                class="button ghost"
+                data-back
+              >
+                ← Retour
+              </button>
+
+              <button
+                type="button"
+                class="button primary"
+                data-next
+              >
+                Voir le récapitulatif
+                <span>→</span>
+              </button>
+
+            </div>
+
           </section>
 
-          <section class="screen" data-step="4">
-            <p class="eyebrow">Étape 4 sur 4</p><h1>Vérifiez votre inscription</h1><p class="lead">Relisez vos informations avant de les envoyer.</p>
-            <div class="recap" id="recap"></div>
-            <label class="confirmation"><input type="checkbox" name="confirmed" /><span>Je confirme que les informations saisies sont correctes.</span></label><div class="form-error" role="alert"></div>
-            <div class="actions"><button type="button" class="button ghost" data-back>← Modifier</button><button type="button" class="button primary" id="submit-registration">Confirmer mon inscription <span>✓</span></button></div>
+
+          <!-- ÉTAPE 4 -->
+          <section
+            class="screen"
+            data-step="4"
+          >
+
+            <p class="eyebrow">
+              Étape 4 sur 4
+            </p>
+
+            <h1>
+              Vérifiez votre inscription
+            </h1>
+
+            <p class="lead">
+              Relisez vos informations avant de les envoyer.
+            </p>
+
+            <div
+              class="recap"
+              id="recap"
+            ></div>
+
+            <label class="confirmation">
+
+              <input
+                type="checkbox"
+                name="confirmed"
+              />
+
+              <span>
+                Je confirme que les informations saisies sont correctes.
+              </span>
+
+            </label>
+
+            <div
+              class="form-error"
+              role="alert"
+            ></div>
+
+            <div class="actions">
+
+              <button
+                type="button"
+                class="button ghost"
+                data-back
+              >
+                ← Modifier
+              </button>
+
+              <button
+                type="button"
+                class="button primary"
+                id="submit-registration"
+              >
+                Confirmer mon inscription
+                <span>✓</span>
+              </button>
+
+            </div>
+
           </section>
+
         </form>
 
-        <section class="success" id="success" hidden>
-          <div class="success-icon">✓</div><p class="eyebrow">Pré-inscription enregistrée</p><h1>Merci, <span id="student-name"></span> !</h1><p class="lead">Votre demande a bien été enregistrée. Gardez précieusement ce code pour vos échanges avec l’administration.</p>
-          <div class="code-box"><small>Votre code d’inscription</small><strong id="registration-code">NOK-26-00000</strong><button type="button" id="copy-code" class="copy">Copier le code</button></div>
-          <div class="success-note"><span>i</span><p>L’administration de l’Institut NOKHBA vous contactera pour finaliser votre inscription.</p></div>
-          <button type="button" class="button primary full" id="new-registration">Faire une nouvelle inscription <span>→</span></button>
+
+        <!-- SUCCÈS -->
+        <section
+          class="success"
+          id="success"
+          hidden
+        >
+
+          <div class="success-icon">
+            ✓
+          </div>
+
+          <p class="eyebrow">
+            Pré-inscription enregistrée
+          </p>
+
+          <h1>
+            Merci,
+            <span id="student-name"></span>
+            !
+          </h1>
+
+          <p class="lead">
+            Votre demande a bien été enregistrée.
+            Gardez précieusement ce code pour vos échanges avec l’administration.
+          </p>
+
+          <div class="code-box">
+
+            <small>
+              Votre code d’inscription
+            </small>
+
+            <strong id="registration-code">
+              NOK-26-00000
+            </strong>
+
+            <button
+              type="button"
+              id="copy-code"
+              class="copy"
+            >
+              Copier le code
+            </button>
+
+          </div>
+
+          <div class="success-note">
+
+            <span>i</span>
+
+            <p>
+              L’administration de l’Institut NOKHBA vous contactera
+              pour finaliser votre inscription.
+            </p>
+
+          </div>
+
+          <button
+            type="button"
+            class="button primary full"
+            id="new-registration"
+          >
+            Faire une nouvelle inscription
+            <span>→</span>
+          </button>
+
         </section>
+
       </section>
-      <footer>© 2026 Institut NOKHBA · Pré-inscription en ligne</footer>
+
+      <footer>
+        © 2026 Institut NOKHBA · Pré-inscription en ligne
+      </footer>
+
     </main>
+
     <script src="catalogue.js"></script>
     <script src="storage.js"></script>
     <script src="supabase-config.js"></script>
     <script src="supabase-client.js"></script>
     <script src="app.js"></script>
+
   </body>
 </html>
