@@ -1886,30 +1886,48 @@ if (submitButton) {
 
       }
 
-      catch (err) {
+     catch (err) {
 
-        console.error(
-          'Erreur inscription:',
-          err
-        );
+  console.error(
+    'Erreur inscription:',
+    err
+  );
 
+  const errorText =
+    String(
+      err?.message ||
+      err ||
+      ''
+    );
 
-        setError(
-          'Une erreur est survenue. Veuillez réessayer.'
-        );
+  if (
+    errorText.includes(
+      'DUPLICATE_REGISTRATION'
+    )
+  ) {
 
+    setError(
+      'Ce téléphone est déjà associé à une inscription. Si vous pensez qu’il s’agit d’une erreur, veuillez contacter l’Institut NOKHBA.'
+    );
 
-        submitButton.disabled =
-          false;
+  }
 
+  else {
 
-        submitButton.innerHTML =
-          oldButtonText;
+    setError(
+      'Une erreur est survenue. Veuillez réessayer.'
+    );
 
+  }
 
-        return;
+  submitButton.disabled =
+    false;
 
-      }
+  submitButton.innerHTML =
+    oldButtonText;
+
+  return;
+}
 
 
       /* =====================================================
